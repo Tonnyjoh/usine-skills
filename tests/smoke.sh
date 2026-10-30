@@ -205,6 +205,48 @@ P
 printf 'body { font-family: Inter; }\n' > src/pinned.css
 expect 0 design-check                            # a pinned font is allowed
 
+# --- auto mode: only with the user's words, and every check stays
+expect 2 approve q0 --auto                       # unknown feature
+expect 0 start r
+printf -- '- Status: d\n- AC-1: a\n' > docs/specs/r.md
+expect 2 approve r --auto                        # not started in auto mode
+expect 2 approve r                               # no quote
+expect 2 start a1 --auto                         # auto needs the user's words
+expect 0 start a1 --auto --quote "ship --auto, don't ask me"
+expect 2 approve a1 --auto                       # the spec is still required
+printf -- '- Status: d\n- AC-1: a\n' > docs/specs/a1.md
+expect 0 approve a1 --auto
+contains "ship --auto, don't ask me" .team/features/a1.json
+expect 2 advance a1 development                  # design still pending
+expect 0 advance a1 design
+printf '# Brief\n## References\nnone\n' > docs/design/a1.md
+expect 2 approve-design a1 --auto                # references still required
+printf '# Brief\n## References\n- https://www.awwwards.com/y: space\n' > docs/design/a1.md
+expect 0 approve-design a1 --auto
+expect 0 advance a1 development
+expect 0 note a1 "Chose light over dark"
+contains 'Chose light over dark' .team/features/a1.json
+expect 0 advance a1 integration
+expect 2 advance a1 review                       # verifications still required
+expect 0 leftovers
+
+# --- scope: design documents are protected, and blame does not carry over
+python3 - <<'P' || { echo "FAIL: generated scope text"; failures=$((failures+1)); }
+assert "only in the project, except" in open(".claude/agents/frontend.md").read()
+P
+echo tampered >> docs/design/a1.md
+expect 2 scope-check frontend --feature a1       # a developer touched the brief
+expect 0 scope-check tester --feature a1         # and the tester is not blamed for it
+echo 'test' > tests/x.test.js
+expect 0 scope-check tester --feature a1
+echo tampered2 >> docs/design/a1.md
+expect 2 scope-check design --feature a1         # the brief is locked even for its author
+echo 'review' > docs/design/review.md
+expect 0 scope-check design --feature a1         # other design notes are fine
+echo 'export const lead = 1' > src/lead.js
+expect 0 lead-change a1 --reason "restored a file"
+expect 0 scope-check tester --feature a1         # the lead's own change is not an incident
+
 # --- no interface: the design phase can be skipped, with a reason
 expect 0 start q
 printf -- '- Status: d\n- AC-1: a\n' > docs/specs/q.md

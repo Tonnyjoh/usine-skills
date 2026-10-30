@@ -29,6 +29,8 @@ A tool's sandbox may refuse this command because it writes to `.git` (Codex does
 - **Model:** `model` concerns only Claude Code. A Codex agent inherits the session's model unless `codex_model` is set.
 - **Independent checks:** they require an agent with a blank context. Without real subagents, say so in the report.
 
-- **Seeing the design:** the design agent uses Claude in Chrome when it is connected and the site is permitted, in the user's real browser and read-only on public pages. Without a browser, it only has text and titles and must say so. The design agent file sets no tool list so that it inherits these tools.
+- **Seeing the design:** the design agent uses Claude in Chrome when it is connected and the site is permitted, in the user's real browser and read-only on public pages. It may not be able to resize that window, so screenshots at given widths go through headless Chrome with playwright-core, installed outside the project. Without a browser, it only has text and titles and must say so. The design agent file sets no tool list so that it inherits these tools.
+- **Project agents:** Claude Code loads `.claude/agents/` from the folder where the session started. In a session started elsewhere, use [degraded.md](degraded.md).
+- **Auto mode:** background agents cannot answer permission prompts. Allow the project's usual commands in the tool's settings beforehand, without widening its sandbox.
 
 The `team` script needs only Python 3 and git, and depends on no tool.
