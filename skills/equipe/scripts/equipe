@@ -30,6 +30,8 @@ ROLES_QUALITE = {"testeur", "relecteur", "securite"}
 ROLES_CONCEPTION = {"ux", "documentation"}
 MAX_TOURS = 3
 MARQUE_AGENT = "<!-- Généré par /equipe composer."
+MARQUE_CODEX = "# Généré par /equipe composer."
+FICHIERS_REGLES = ("CLAUDE.md", "AGENTS.md")
 DEBUT_SECTION = "<!-- equipe:debut -->"
 FIN_SECTION = "<!-- equipe:fin -->"
 FONCTIONS = {"backend": "le backend", "frontend": "l'interface web", "mobile": "l'application mobile",
@@ -407,6 +409,40 @@ def rendre_agent(team, a):
     return texte
 
 
+def rendre_agent_codex(team, a):
+    """Même agent au format Codex. Le modèle est hérité : `sonnet` n'y a pas de sens."""
+    m = re.match(r"---\n(.*?)\n---\n(.*)", rendre_agent(team, a), re.S)
+    description = re.search(r"^description: (.*)$", m.group(1), re.M).group(1)
+    corps = re.sub(r"<!--.*?-->\n*", "", m.group(2), count=1).strip()
+    instructions = json.dumps(corps, ensure_ascii=False) if "'''" in corps else f"'''\n{corps}\n'''"
+    modele = f"model = {json.dumps(a['modele_codex'])}\n" if a.get("modele_codex") else ""
+    return (f"{MARQUE_CODEX} Tu peux retoucher ce fichier ; le docteur signalera l'écart sans l'écraser.\n"
+            f"name = {json.dumps(a['nom'], ensure_ascii=False)}\n"
+            f"description = {json.dumps(description, ensure_ascii=False)}\n{modele}"
+            f"developer_instructions = {instructions}\n")
+
+
+def fichiers_agent(team, a):
+    """Les fichiers d'un agent, un par outil déclaré dans projet.outils."""
+    outils = outils_projet(team)
+    res = []
+    if "claude" in outils:
+        res.append((f".claude/agents/{a['nom']}.md", rendre_agent(team, a)))
+    if "codex" in outils:
+        res.append((f".codex/agents/{a['nom']}.toml", rendre_agent_codex(team, a)))
+    return res
+
+
+def outils_projet(team):
+    return team.get("projet", {}).get("outils", ["claude"])
+
+
+def fichiers_regles(team):
+    """AGENTS.md porte les mêmes règles pour les autres outils, qui ne lisent pas CLAUDE.md."""
+    outils = outils_projet(team)
+    return [nom for nom, requis in (("CLAUDE.md", "claude" in outils), ("AGENTS.md", outils != ["claude"])) if requis]
+
+
 def tableau_equipe(team):
     lignes = ["| Agent | Spécialité | Périmètre | Vérification | Modèle |", "|---|---|---|---|---|"]
     for a in actifs(team):
@@ -536,8 +572,9 @@ def cmd_context(args):
         res["equipe"] = [{"nom": a["nom"], "role": a.get("role"), "specialite": a.get("specialite")} for a in actifs(team)]
         res["problemes_composition"] = valider_composition(team)
         for a in actifs(team):
-            if not (RACINE / ".claude" / "agents" / f"{a['nom']}.md").is_file():
-                directives.append({"code": "AGENT_NON_GENERE", "message": f"{a['nom']} n'a pas de fichier .claude/agents : equipe scaffold."})
+            for rel, _ in fichiers_agent(team, a):
+                if not (RACINE / rel).is_file():
+                    directives.append({"code": "AGENT_NON_GENERE", "message": f"{rel} manquant : equipe scaffold."})
         res["fonctionnalites"] = etats_resumes()
     res["directives"] = directives
     emit(res)
@@ -588,7 +625,7 @@ def agent_dev_propose(canon, stacks, a_confirmer):
 def cmd_proposer(args):
     team = charger_equipe(obligatoire=False) or {
         "version": 1, "agents": [],
-        "projet": {"nom": RACINE.name, "objectif": "", "dossier_specs": "docs/specs", "contrat": None}}
+        "projet": {"nom": RACINE.name, "objectif": "", "dossier_specs": "docs/specs", "contrat": None, "outils": ["claude"]}}
     stacks = detecter_stacks(RACINE)
     indices = indices_complementaires(RACINE, stacks)
     a_confirmer = []
@@ -688,7 +725,8 @@ def cmd_scaffold(args):
             crees.append(rel)
 
     for a in actifs(team):
-        poser(f".claude/agents/{a['nom']}.md", rendre_agent(team, a))
+        for rel, contenu in fichiers_agent(team, a):
+            poser(rel, contenu)
     dossier = team["projet"].get("dossier_specs", "docs/specs")
     gabarit_spec = (ASSETS / "spec.md").read_text()
     poser(f"{dossier}/_modele-spec.md", gabarit_spec)
@@ -699,25 +737,26 @@ def cmd_scaffold(args):
         intacts.append(contrat)
 
     section = rendre_section_claude(team)
-    claude = RACINE / "CLAUDE.md"
-    if not claude.exists():
-        if not args.essai:
-            claude.write_text("# " + team["projet"].get("nom", "Projet") + "\n\n" + section)
-        crees.append("CLAUDE.md")
-    else:
-        txt = claude.read_text(errors="replace")
+    for nom in fichiers_regles(team):
+        cible = RACINE / nom
+        if not cible.exists():
+            if not args.essai:
+                cible.write_text("# " + team["projet"].get("nom", "Projet") + "\n\n" + section)
+            crees.append(nom)
+            continue
+        txt = cible.read_text(errors="replace")
         if DEBUT_SECTION in txt and FIN_SECTION in txt:
             nouveau = re.sub(re.escape(DEBUT_SECTION) + r".*?" + re.escape(FIN_SECTION) + r"\n?", lambda m: section, txt, flags=re.S)
         else:
             nouveau = txt.rstrip() + "\n\n" + section
         if nouveau == txt:
-            intacts.append("CLAUDE.md")
-        elif "CLAUDE.md" in (args.ecraser or []):
+            intacts.append(nom)
+        elif nom in (args.ecraser or []):
             if not args.essai:
-                claude.write_text(nouveau)
-            crees.append("CLAUDE.md (section Équipe d'agents)")
+                cible.write_text(nouveau)
+            crees.append(f"{nom} (section Équipe d'agents)")
         else:
-            conflits.append({"fichier": "CLAUDE.md", "diff": diff_texte(txt, nouveau, "CLAUDE.md")})
+            conflits.append({"fichier": nom, "diff": diff_texte(txt, nouveau, nom)})
     emit({"statut": "essai" if args.essai else "ok", "crees": crees, "intacts": intacts, "a_confirmer": conflits,
           "avertissements": [p for p in pbs if p["gravite"] != "bloquant"],
           "note": "a_confirmer : montrer le diff à l'utilisateur, puis relancer avec --ecraser <fichier> s'il accepte."})
@@ -754,7 +793,7 @@ def cmd_preflight(args):
         sales = []
         for f in fichiers_modifies(top):
             rel = relatif_projet(top, f)
-            if not (rel.startswith(".claude/") or rel == "CLAUDE.md" or rel.startswith(norm(specs) + "/") or rel == contrat):
+            if not (rel.startswith((".claude/", ".codex/")) or rel in FICHIERS_REGLES or rel.startswith(norm(specs) + "/") or rel == contrat):
                 sales.append(rel)
         depots.append({"chemin": os.path.relpath(top, RACINE), "branche": branche,
                        "sur_branche_par_defaut": branche in (defaut, "main", "master"), "modifs_hors_equipe": sales})
@@ -768,9 +807,7 @@ def cmd_preflight(args):
             pbs.append({"code": "ACCORD_ABSENT", "gravite": "bloquant", "message": "Pas de feu vert enregistré : retour à /equipe cadrer."})
         elif e["accord"]["hash"] != hash_accord(team, feature):
             pbs.append({"code": "SPEC_MODIFIEE_APRES_ACCORD", "gravite": "bloquant", "message": "Spec ou contrat modifiés depuis le feu vert : redemander l'accord."})
-    emit({"mode": mode, "raison": raison, "depots": depots, "problemes": pbs,
-          "branche_de_travail": f"equipe/{feature}" if feature else None},
-         2 if bloquants(pbs) else 0)
+    emit({"mode": mode, "raison": raison, "depots": depots, "problemes": pbs}, 2 if bloquants(pbs) else 0)
 
 
 def cmd_demarrer(args):
@@ -943,18 +980,48 @@ def fichiers_du_agent(team, a, args):
     return sorted(res), info, (e, actuel)
 
 
+def analyser_perimetre(team, a, fichiers):
+    if a.get("role") == "testeur" or a.get("role") == ROLES_DEV or a.get("role") in ROLES_CONCEPTION:
+        hors = [f for f in fichiers if not dans_perimetre(f, a.get("perimetre", []))]
+    else:
+        hors = list(fichiers)
+    contrat = team["projet"].get("contrat")
+    dossier = norm(team["projet"].get("dossier_specs", "docs/specs"))
+    return hors, [f for f in fichiers if f == contrat or f.startswith(dossier + "/")]
+
+
+def cmd_appliquer(args):
+    """Reporte le travail d'un worktree dans l'arbre principal, sans aucun commit."""
+    team = charger_equipe()
+    a = agent_par_nom(team, args.agent)
+    args.base, args.head, args.fonctionnalite = None, None, None
+    fichiers, info, _ = fichiers_du_agent(team, a, args)
+    hors, interdits = analyser_perimetre(team, a, fichiers)
+    if hors or interdits:
+        bloque("HORS_PERIMETRE", "Rien n'a été appliqué.", hors_perimetre=hors, spec_ou_contrat_touches=interdits)
+    if info.get("base_divergente"):
+        d = info["base_divergente"]
+        bloque("BASE_DIVERGENTE", d["message"], attendue=d["attendue"], reelle=d["reelle"])
+    if not fichiers:
+        emit({"statut": "rien", "message": "Aucune modification dans ce worktree."})
+    top = toplevel(RACINE / a.get("depot", "."))
+    wt = Path(args.worktree)
+    _, tete = git(top, "rev-parse", "HEAD")
+    git(wt, "add", "-A")
+    patch = subprocess.run(["git", "-C", str(wt), "diff", "--cached", "--binary", tete], capture_output=True).stdout
+    r = subprocess.run(["git", "-C", str(top), "apply", "--whitespace=nowarn", "-"], input=patch, capture_output=True)
+    if r.returncode != 0:
+        bloque("APPLICATION_IMPOSSIBLE", "Le patch ne s'applique pas : conflit à arbitrer, rien n'a été modifié.",
+               detail=r.stderr.decode(errors="replace")[-800:])
+    emit({"statut": "ok", "fichiers": fichiers, "note": "Modifications non committées dans l'arbre principal."})
+
+
 def cmd_scope_check(args):
     team = charger_equipe()
     a = agent_par_nom(team, args.agent)
     fichiers, info, reprise = fichiers_du_agent(team, a, args)
     perimetre = a.get("perimetre", [])
-    if a.get("role") == "testeur" or a.get("role") == ROLES_DEV or a.get("role") in ROLES_CONCEPTION:
-        hors = [f for f in fichiers if not dans_perimetre(f, perimetre)]
-    else:
-        hors = list(fichiers)
-    contrat = team["projet"].get("contrat")
-    dossier = norm(team["projet"].get("dossier_specs", "docs/specs"))
-    interdits = [f for f in fichiers if f == contrat or f.startswith(dossier + "/")]
+    hors, interdits = analyser_perimetre(team, a, fichiers)
     incident = bool(hors or interdits)
     if reprise:
         e, actuel = reprise
@@ -994,15 +1061,15 @@ def cmd_doctor(args):
         emit({"constats": f})
     for p in valider_composition(team):
         trouve("composition-" + p["code"].lower(), "route" if p["gravite"] == "bloquant" else "mention", p["message"], "/equipe composer")
-    agents_dir = RACINE / ".claude" / "agents"
     noms = {a["nom"] for a in actifs(team)}
     for a in actifs(team):
-        p = agents_dir / f"{a['nom']}.md"
-        if not p.is_file():
-            trouve("agent-absent", "auto", f"{a['nom']} : fichier d'agent absent.", "equipe scaffold")
-        elif p.read_text(errors="replace") != rendre_agent(team, a):
-            trouve("agent-derive", "mention", f"{a['nom']} : le fichier diffère de team.json (retouche manuelle ou config changée).",
-                   f"equipe scaffold puis, après accord, --ecraser .claude/agents/{a['nom']}.md")
+        for rel, contenu in fichiers_agent(team, a):
+            p = RACINE / rel
+            if not p.is_file():
+                trouve("agent-absent", "auto", f"{rel} absent.", "equipe scaffold")
+            elif p.read_text(errors="replace") != contenu:
+                trouve("agent-derive", "mention", f"{rel} diffère de team.json (retouche manuelle ou config changée).",
+                       f"equipe scaffold puis, après accord, --ecraser {rel}")
         rep = RACINE / a.get("depot", ".")
         if not rep.is_dir():
             trouve("depot-absent", "route", f"{a['nom']} : dépôt {a.get('depot')} introuvable.", "/equipe composer")
@@ -1013,19 +1080,20 @@ def cmd_doctor(args):
                 base = prefixe_fixe(per)
                 if not (RACINE / base).exists():
                     trouve("perimetre-absent", "mention", f"{a['nom']} : {per} n'existe pas encore.")
-    if agents_dir.is_dir():
-        for p in agents_dir.glob("*.md"):
-            if MARQUE_AGENT in p.read_text(errors="replace") and p.stem not in noms:
-                trouve("agent-orphelin", "mention", f"{p.name} a été généré par equipe mais l'agent n'est plus actif.", "supprimer après accord")
+    for dossier_agents, motif, marque in ((".claude/agents", "*.md", MARQUE_AGENT), (".codex/agents", "*.toml", MARQUE_CODEX)):
+        for p in (RACINE / dossier_agents).glob(motif):
+            if marque in p.read_text(errors="replace") and p.stem not in noms:
+                trouve("agent-orphelin", "mention", f"{dossier_agents}/{p.name} a été généré par equipe mais l'agent n'est plus actif.", "supprimer après accord")
     contrat = chemin_contrat(team)
     if contrat and not contrat.is_file():
         trouve("contrat-absent", "auto", f"{team['projet']['contrat']} absent.", "equipe scaffold")
-    claude = RACINE / "CLAUDE.md"
     section = rendre_section_claude(team)
-    if not claude.is_file() or DEBUT_SECTION not in claude.read_text(errors="replace"):
-        trouve("claude-section-absente", "route", "CLAUDE.md n'a pas de section Équipe d'agents.", "equipe scaffold --ecraser CLAUDE.md après accord")
-    elif section.strip() not in claude.read_text(errors="replace"):
-        trouve("claude-section-derive", "mention", "La section Équipe de CLAUDE.md ne correspond plus à team.json.", "equipe scaffold --ecraser CLAUDE.md après accord")
+    for nom in fichiers_regles(team):
+        cible = RACINE / nom
+        if not cible.is_file() or DEBUT_SECTION not in cible.read_text(errors="replace"):
+            trouve("regles-section-absente", "route", f"{nom} n'a pas de section Équipe d'agents.", f"equipe scaffold --ecraser {nom} après accord")
+        elif section.strip() not in cible.read_text(errors="replace"):
+            trouve("regles-section-derive", "mention", f"La section Équipe de {nom} ne correspond plus à team.json.", f"equipe scaffold --ecraser {nom} après accord")
     for r in etats_resumes():
         e = charger_etat(r["fonctionnalite"])
         if e.get("accord") and e["phase"] not in ("termine", "arrete") and e["accord"]["hash"] != hash_accord(team, r["fonctionnalite"]):
@@ -1088,6 +1156,10 @@ def principal():
     g.add_argument("--tout", action="store_true")
     x.add_argument("--timeout", type=int, default=900)
     x.set_defaults(fn=cmd_verify)
+    x = s.add_parser("appliquer")
+    x.add_argument("agent")
+    x.add_argument("--worktree", required=True)
+    x.set_defaults(fn=cmd_appliquer)
     x = s.add_parser("scope-check")
     x.add_argument("agent")
     x.add_argument("--fonctionnalite")

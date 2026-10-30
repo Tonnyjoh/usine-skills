@@ -27,6 +27,8 @@ attend 0 proposer front test --ecrire
 attend 0 scaffold
 contient 'name: frontend' .claude/agents/frontend.md
 if grep -l '{{' .claude/agents/*.md CLAUDE.md; then echo "ÉCHEC : gabarit non résolu"; echecs=$((echecs+1)); fi
+contient 'noreply' CLAUDE.md
+[ ! -e AGENTS.md ] && [ ! -e .codex ] || { echo "ÉCHEC : fichiers d'autres outils créés par défaut"; echecs=$((echecs+1)); }
 echo 'retouche' >> .claude/agents/frontend.md
 attend 0 scaffold
 contient 'retouche' .claude/agents/frontend.md   # jamais écrasé
@@ -75,8 +77,22 @@ attend 0 scaffold
 attend 0 proposer back --ecrire
 contient '"contrat": "docs/api/openapi.yaml"' .equipe/team.json
 contient 'cd back' .equipe/team.json
+python3 - <<'P'
+import json
+d = json.load(open(".equipe/team.json")); d["projet"]["outils"] = ["claude", "codex"]
+json.dump(d, open(".equipe/team.json", "w"), ensure_ascii=False, indent=2)
+P
 attend 0 scaffold --ecraser CLAUDE.md --ecraser .claude/agents/testeur.md
 contient 'backend' CLAUDE.md
+contient 'noreply' AGENTS.md                     # la règle des commits atteint les autres outils
+contient 'name = "backend"' .codex/agents/backend.toml
+python3 - <<'P' || { echo "ÉCHEC : TOML Codex invalide"; echecs=$((echecs+1)); }
+import glob, tomllib
+for f in glob.glob(".codex/agents/*.toml"):
+    d = tomllib.load(open(f, "rb"))
+    assert d["name"] and d["description"] and d["developer_instructions"], f
+    assert "<!--" not in d["developer_instructions"] and "model" not in d, f
+P
 attend 0 doctor
 git add -A; git commit -qm equipe
 attend 0 demarrer h
@@ -84,16 +100,22 @@ printf -- '- Statut : b\n- CA-1 : a\n' > docs/specs/h.md
 attend 0 approuver h --citation go
 python3 "$E" preflight h | grep -q '"mode": "worktree"' || { echo "ÉCHEC : mode worktree attendu"; echecs=$((echecs+1)); }
 git worktree add -q -b avant ../wt-avant HEAD   # part d'avant la branche de travail
-git switch -qc equipe/h; git add -A; git commit -qm spec
+git add -A; git commit -qm spec
 attend 0 avancer h developpement
+tete=$(git rev-parse HEAD)
 git worktree add -q -b wt-front ../wt-front HEAD
-echo 1 > ../wt-front/front/x.js; git -C ../wt-front add -A; git -C ../wt-front commit -qm front
+echo 1 > ../wt-front/front/x.js                  # le travail reste non committé
 attend 0 scope-check frontend --worktree ../wt-front
 python3 "$E" scope-check frontend --worktree ../wt-avant | grep -q base_divergente || { echo "ÉCHEC : base divergente non vue"; echecs=$((echecs+1)); }
+attend 2 appliquer frontend --worktree ../wt-avant
 git worktree add -q -b wt-mal ../wt-mal HEAD
-echo 1 > ../wt-mal/back/y.js; git -C ../wt-mal add -A; git -C ../wt-mal commit -qm mal
+echo 1 > ../wt-mal/back/y.js
 attend 2 scope-check frontend --worktree ../wt-mal
-git merge -q --no-ff -m m wt-front || { echo "ÉCHEC : fusion"; echecs=$((echecs+1)); }
+attend 2 appliquer frontend --worktree ../wt-mal
+[ ! -e back/y.js ] || { echo "ÉCHEC : hors périmètre appliqué"; echecs=$((echecs+1)); }
+attend 0 appliquer frontend --worktree ../wt-front
+[ -e front/x.js ] || { echo "ÉCHEC : travail non reporté"; echecs=$((echecs+1)); }
+[ "$(git rev-parse HEAD)" = "$tete" ] || { echo "ÉCHEC : un commit a été créé"; echecs=$((echecs+1)); }
 attend 0 avancer h integration
 for i in 1 2 3; do attend 0 tour h; attend 0 avancer h integration; done
 attend 3 tour h                                  # quatrième tour refusé

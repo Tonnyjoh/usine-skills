@@ -29,7 +29,7 @@ Endpoints, schémas, codes d'erreur, emploi du schéma `Error`. Précis jusqu'au
 - un résumé de la spec et du contrat ;
 - les hypothèses faites ;
 - la répartition prévue : quel agent, quels critères ;
-- le mode, donné par `equipe preflight` : séquentiel, par dépôt ou worktree. S'il s'agit de worktree, annonce la branche `equipe/<nom>` et ses commits locaux.
+- le mode, donné par `equipe preflight` : séquentiel, par dépôt ou worktree.
 
 Ne délègue rien avant un feu vert explicite. Un « ok » à une autre question n'en est pas un.
 

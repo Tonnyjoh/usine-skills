@@ -10,18 +10,18 @@ Si un agent est `bloqué` sur le contrat, **ne le contourne pas**. Explique le p
 
 ## 2. Rassembler
 
-- **sequentiel, par-depot :** les modifications sont déjà en place, rien à fusionner.
-- **worktree :** dans la branche `equipe/<nom>`, pour chaque agent :
+- **sequentiel, par-depot :** les modifications sont déjà en place, rien à reporter.
+- **worktree :** pour chaque agent :
 
   ```
-  git merge --no-ff <branche-du-worktree>
+  equipe appliquer <agent> --worktree <chemin>
   ```
 
-  Ces fusions locales sur `equipe/*` sont le mécanisme annoncé au feu vert. Elles ne touchent ni la branche d'origine ni le dépôt distant : la fusion finale reste à l'utilisateur.
+  La commande refuse un travail hors périmètre, puis reporte les modifications dans l'arbre principal **sans aucun commit**. L'utilisateur garde ainsi la décision à la fin.
 
-Conflit : arbitre en respectant le contrat. Si le choix est métier, demande. Des périmètres disjoints n'ont normalement pas de conflit ; s'il y en a un, cherche pourquoi (fichier généré, lockfile).
+Conflit (`APPLICATION_IMPOSSIBLE`) : arbitre en respectant le contrat. Si le choix est métier, demande. Des périmètres disjoints n'ont normalement pas de conflit ; s'il y en a un, cherche pourquoi (fichier généré, lockfile).
 
-Une fois tout fusionné, supprime les worktrees (`git worktree remove`) et leurs branches (`git branch -d`, qui refuse une branche non fusionnée).
+Une fois tout reporté et vérifié à l'étape 3, supprime les worktrees. Comme leurs modifications ne sont pas committées, `git worktree remove` exige `--force` : ne le fais qu'après avoir confirmé que chaque `appliquer` a réussi. Supprime ensuite leurs branches si tu les as créées.
 
 ## 3. Vérifier le résultat intégré
 
