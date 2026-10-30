@@ -1,0 +1,36 @@
+{
+  "backend": {
+    "Java / Spring Boot": "Architecture propre : domain / application / infrastructure / web. Domaine indépendant de Spring. Pas de logique métier dans les contrôleurs. Validation via Bean Validation, erreurs via un gestionnaire global conforme au schéma `Error` du contrat. Tests JUnit 5 + Mockito, tests d'intégration avec Spring Boot Test.",
+    "Node.js / NestJS": "Modules, contrôleurs, services et providers ; DTO validés (class-validator) ; filtres d'exceptions conformes au schéma `Error`. Tests Jest. TypeScript strict.",
+    "Node.js / Express": "Routes fines, logique dans des services, validation des entrées (zod ou équivalent), middleware d'erreurs conforme au schéma `Error`. Tests Jest ou Vitest.",
+    "Python / FastAPI": "Modèles Pydantic alignés sur le contrat, routeurs fins, injection de dépendances, gestionnaires d'exceptions conformes au schéma `Error`. Tests pytest. Annotations de types.",
+    "Python / Django": "Modèles, serializers/DRF alignés sur le contrat, vues fines, logique dans des services. Migrations versionnées. Tests pytest-django.",
+    "PHP / Laravel": "Contrôleurs fins, FormRequest pour la validation, ressources API alignées sur le contrat, services pour le métier. Migrations. Tests Pest ou PHPUnit.",
+    ".NET / ASP.NET Core": "Contrôleurs ou endpoints minimaux fins, DTO alignés sur le contrat, services applicatifs, middleware d'erreurs conforme au schéma `Error`. Tests xUnit.",
+    "Go": "Packages petits et cohérents, interfaces côté consommateur, erreurs explicites, handlers fins. Tests table-driven."
+  },
+  "frontend_mobile": {
+    "React": "Composants fonctionnels et hooks, état local d'abord, appels API isolés dans une couche dédiée typée d'après le contrat. Tests avec Testing Library. TypeScript strict.",
+    "Next.js": "App Router ou Pages selon l'existant (ne pas mélanger), composants serveur/client assumés, données côté serveur quand pertinent. Tests Testing Library.",
+    "Angular": "Composants standalone si le projet les utilise, services pour les appels HTTP typés d'après le contrat, RxJS maîtrisé (désabonnements), formulaires réactifs. Tests Jasmine/Karma ou Jest selon l'existant.",
+    "Vue / Nuxt": "Composition API, composables pour la logique partagée, store (Pinia) seulement si nécessaire. Tests Vitest + Vue Test Utils.",
+    "Flutter": "Widgets petits, séparation présentation / état, client API généré ou typé d'après le contrat, gestion explicite des états de chargement et d'erreur. Tests widget et unitaires.",
+    "React Native": "Composants fonctionnels, navigation selon l'existant, couche API typée d'après le contrat, gestion des états hors ligne si la spec l'exige. Tests Jest + Testing Library.",
+    "Kotlin / Jetpack Compose": "Composables sans état quand possible, ViewModel + StateFlow pour l'état, client Retrofit typé d'après le contrat, gestion explicite des états d'écran. Tests unitaires du ViewModel.",
+    "Swift / SwiftUI": "Vues légères, état via `@State`/`@Observable` selon la version cible, couche réseau typée d'après le contrat. Tests XCTest."
+  },
+  "donnees": {
+    "PostgreSQL": "Migrations versionnées, jamais de modification d'une migration déjà appliquée. Contraintes et index explicites, requêtes paramétrées. Toute migration destructive demande un accord explicite.",
+    "MySQL": "Migrations versionnées, jamais de modification d'une migration déjà appliquée. Attention aux verrous sur les ALTER, requêtes paramétrées. Toute migration destructive demande un accord explicite.",
+    "MongoDB": "Schémas validés côté base ou applicatif, index justifiés par les requêtes, scripts de migration idempotents. Toute suppression de données demande un accord explicite.",
+    "Oracle": "Migrations versionnées (Flyway ou Liquibase selon l'existant), séquences et contraintes explicites, requêtes paramétrées. Toute migration destructive demande un accord explicite."
+  },
+  "devops": {
+    "Docker": "Images multi-étapes, utilisateur non root, secrets uniquement par variables d'environnement. Jamais de déploiement réel sans accord explicite.",
+    "GitHub Actions": "Actions épinglées à une version, permissions minimales, secrets via le coffre du dépôt. Jamais de déploiement réel sans accord explicite.",
+    "GitLab CI": "Étapes petites et mises en cache, variables protégées pour les secrets. Jamais de déploiement réel sans accord explicite.",
+    "Kubernetes": "Manifestes déclaratifs, ressources et sondes renseignées, secrets hors du dépôt. N'applique rien sur un cluster sans accord explicite.",
+    "Terraform": "Modules petits, état distant, `plan` seulement ; `apply` et `destroy` demandent un accord explicite.",
+    "Docker + GitHub Actions": "Images multi-étapes et utilisateur non root ; actions épinglées, permissions minimales, secrets via le coffre du dépôt. Jamais de déploiement réel sans accord explicite."
+  }
+}
