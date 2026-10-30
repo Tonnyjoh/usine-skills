@@ -15,7 +15,8 @@ Un système multi-agents échoue rarement par manque de talent. Il échoue parce
 
 1. Lance `<skill>/scripts/equipe context` une fois par session, où `<skill>` est le dossier de ce fichier ; garde le répertoire courant à la racine du projet. Il donne la topologie, les stacks, l'équipe, les fonctionnalités en cours et des directives. Suis-les et ne le relance pas.
 2. Charge le fichier de référence de la commande demandée, et seulement celui-là : le reste ne ferait que consommer du contexte.
-3. Si les agents du projet ne sont pas disponibles dans cette session, lis [reference/degrade.md](reference/degrade.md).
+3. Avant de lancer un agent ou de poser des questions, lis [reference/outils.md](reference/outils.md) : les instructions décrivent ce qu'il faut obtenir, et ce fichier dit comment le faire avec ton outil (Claude Code, Codex ou autre).
+4. Si les agents du projet ne sont pas disponibles dans cette session, lis [reference/degrade.md](reference/degrade.md).
 
 **Script indisponible :** dis-le dans un message avant ton prochain appel d'outil, puis continue en appliquant toi-même les règles. Les garde-fous deviennent alors déclaratifs, et le compte rendu doit le mentionner.
 
@@ -32,7 +33,7 @@ Un système multi-agents échoue rarement par manque de talent. Il échoue parce
 9. **Trois tours de correction au maximum** par fonctionnalité. Au-delà, le problème n'est plus dans le code : arrête-toi et rends compte.
 10. **Pas d'équipe pour une petite tâche.** Un bug isolé ou une modification étroite se traite directement : dis-le et fais-le, même si `/equipe` a été invoqué.
 
-Aucun commit sur une branche existante, push, fusion finale ni déploiement sans accord explicite. Les seuls commits permis sont ceux, locaux, des branches `equipe/*` en mode worktree, annoncés au feu vert ([reference/integrer.md](reference/integrer.md)).
+11. **Aucun commit sans demander, à chaque fois,** ni push, fusion ou déploiement. Quand un commit est accepté, demande aussi s'il doit porter une ligne d'attribution (`Co-Authored-By: … <noreply@…>`) : plusieurs outils d'IA ou personnes peuvent intervenir sur un projet, donc n'en ajoute jamais d'office, même si ton outil le propose par défaut. Les agents ne committent pas non plus : leur travail reste en modifications non committées.
 
 ## Commandes
 
@@ -64,6 +65,6 @@ Trois moments reviennent à l'utilisateur, et aucun enchaînement ne les saute :
 
 1. **Après le récapitulatif de l'équipe,** avant de créer un fichier. Un simple « ok » suffit ici.
 2. **Après la spec et le contrat,** avant de déléguer quoi que ce soit. Le script refuse la phase de développement sans feu vert enregistré, et refuse aussi si la spec ou le contrat ont changé depuis.
-3. **À la fin,** avant tout commit, push, fusion finale ou déploiement.
+3. **À la fin,** avant tout commit, push, fusion ou déploiement. Pour un commit, pose aussi la question de la ligne d'attribution.
 
 Le garde-fou du script n'est pas un obstacle à contourner : s'il bloque, rapporte le code et ce qu'il signifie. Ne modifie jamais `.equipe/` à la main pour le faire passer.

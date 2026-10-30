@@ -30,7 +30,21 @@ git clone https://github.com/Tonnyjoh/usine-skills ~/usine-skills
 ln -s ~/usine-skills/skills/equipe ~/.claude/skills/equipe
 ```
 
-Il faut Python 3 ; aucune autre dépendance.
+Il faut Python 3 et git ; aucune autre dépendance.
+
+## Avec d'autres outils que Claude
+
+La skill est faite pour Claude Code. Sur un projet partagé, ajoute `codex` à `projet.outils` dans `.equipe/team.json`, relance le scaffold, et installe la skill aussi dans `~/.agents/skills/equipe`, où Codex l'appelle avec `$equipe`. Ce support suit la documentation de Codex, mais n'a pas été essayé dans une vraie session Codex.
+
+| | Claude Code | Codex | Autres outils |
+|---|---|---|---|
+| Script et garde-fous | Oui | Oui | Oui |
+| Règles du projet | `CLAUDE.md` | `AGENTS.md` | `AGENTS.md`, si l'outil le lit |
+| Agents spécialisés | `.claude/agents/` | `.codex/agents/` | Non : l'outil joue les rôles lui-même |
+| Parallèle isolé | Oui | Seulement si le bac à sable autorise `git worktree`, sinon séquentiel | Selon l'outil |
+| Agents vraiment en lecture seule | Oui | Non : le script contrôle le diff après coup | Selon l'outil |
+
+Les différences sont détaillées dans `skills/equipe/reference/outils.md`.
 
 ## Utilisation
 
@@ -67,7 +81,9 @@ Le script `skills/equipe/scripts/equipe` refuse ce qui ne doit pas passer :
 - **Périmètres contrôlés sur le diff.** Un agent sorti de son périmètre ou ayant touché au contrat déclenche un incident.
 - **Trois tours de correction au maximum,** puis arrêt et compte rendu.
 
-Il ne remplace jamais un fichier existant sans te montrer le diff, et ne commit jamais sur tes branches. Le seul cas de commit : en mode parallèle, des commits locaux sur des branches `equipe/*`, annoncés au feu vert.
+Il ne remplace jamais un fichier existant sans te montrer le diff.
+
+**Aucun commit sans te demander, à chaque fois.** Les agents laissent leur travail en modifications non committées, y compris en parallèle. Si tu acceptes un commit, on te demande aussi si tu veux la ligne `Co-Authored-By: … <noreply@…>` : plusieurs outils ou personnes pouvant intervenir, elle n'est jamais ajoutée d'office.
 
 ## Dans ton projet
 

@@ -27,7 +27,7 @@ equipe proposer front test --ecrire
 equipe scaffold
 ```
 
-Les fichiers existants ne sont pas remplacés : `a_confirmer` renvoie leur diff, y compris pour un `CLAUDE.md` existant. Montre-le et relance avec `--ecraser <fichier>` après accord.
+Les fichiers existants ne sont pas remplacés : `a_confirmer` renvoie leur diff, y compris pour un `CLAUDE.md` ou un `AGENTS.md` existant. Montre-le et relance avec `--ecraser <fichier>` après accord.
 
 ## 4. Conclure
 

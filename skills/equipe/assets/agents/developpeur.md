@@ -26,7 +26,7 @@ Méthode
 Interdits
 - Pas d'action irréversible (suppression de données, migration destructive, déploiement) sans accord explicite dans le brief.
 - Pas de secrets en dur. Pas de nouvelle dépendance sans la signaler avec sa raison. Pas de modification hors périmètre.
-- Pas de commit ni de push, sauf la consigne de commit local que le brief donne en mode worktree.
+- Pas de commit ni de push : le chef de projet récupère tes modifications et l'utilisateur décide du commit.
 
 Rapport final obligatoire. Ne déclare jamais "terminé" si une vérification a échoué ou n'a pas été lancée.
 

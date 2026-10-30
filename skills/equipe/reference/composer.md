@@ -10,7 +10,7 @@ Si l'utilisateur a fourni une composition, reprends-la telle quelle. Une valeur 
 
 ## 2. Poser les questions manquantes
 
-Avec l'outil de questions, **en une seule fois et 4 questions au maximum** : rôles à activer, spécialité du backend, spécialité du frontend, commandes de vérification. Propose en premier la valeur déduite du dépôt. Ne demande pas ce que `context` établit avec certitude, mais une valeur « à préciser » ou une vérification `null` reste une vraie question : une équipe sans commande de vérification ne peut rien prouver.
+Avec des questions à choix ([outils.md](outils.md)), **en une seule fois et 4 questions au maximum** : rôles à activer, spécialité du backend, spécialité du frontend, commandes de vérification. Propose en premier la valeur déduite du dépôt. Ne demande pas ce que `context` établit avec certitude, mais une valeur « à préciser » ou une vérification `null` reste une vraie question : une équipe sans commande de vérification ne peut rien prouver.
 
 Compositions types :
 
@@ -38,7 +38,8 @@ Spécialités qualité et conception, à proposer si le rôle est actif :
     "nom": "Mon projet",
     "objectif": "Une phrase.",
     "dossier_specs": "docs/specs",
-    "contrat": "docs/api/openapi.yaml"
+    "contrat": "docs/api/openapi.yaml",
+    "outils": ["claude"]
   },
   "agents": [
     {
@@ -97,7 +98,7 @@ equipe scaffold
 
 Le script ne remplace jamais un fichier existant différent : il le renvoie dans `a_confirmer` avec son diff. Montre ce diff, demande, et relance avec `--ecraser <fichier>` seulement après accord. C'est aussi le cas de la section ajoutée à un `CLAUDE.md` existant.
 
-Il crée `.claude/agents/<nom>.md` pour chaque agent actif, `<dossier_specs>/_modele-spec.md`, le squelette du contrat s'il manque, et la section « Équipe d'agents » de `CLAUDE.md`.
+Il crée, pour chaque agent actif, un fichier par outil de `projet.outils` (`.claude/agents/<nom>.md`, `.codex/agents/<nom>.toml`), puis `<dossier_specs>/_modele-spec.md`, le squelette du contrat s'il manque, et la section « Équipe d'agents » de `CLAUDE.md`, ainsi que d'`AGENTS.md` si un autre outil est déclaré.
 
 ## 6. Rendre compte
 

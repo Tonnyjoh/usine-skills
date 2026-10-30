@@ -18,8 +18,8 @@ Un sous-agent ne sait que ce que dit son brief. Donne des **chemins absolus** po
 Ligne de mode, selon `equipe preflight` :
 
 - **sequentiel** : « Tu travailles dans l'arbre courant. Pas de commit. »
-- **par-depot** : « Tu travailles dans `<chemin absolu du dépôt>`, branche `equipe/<nom>`. Pas de commit. »
-- **worktree** : « Tu travailles dans un worktree isolé. Lance d'abord `<installation>`. À la fin, fais un commit local de tes seuls fichiers, message `equipe(<nom>): <agent>`, et aucun push. Donne le chemin du worktree et le nom de sa branche dans ton rapport. »
+- **par-depot** : « Tu travailles dans `<chemin absolu du dépôt>`. Pas de commit. »
+- **worktree** : « Tu travailles dans un worktree isolé. Lance d'abord `<installation>`. Pas de commit : laisse tes modifications telles quelles. Donne le chemin du worktree dans ton rapport. »
 
 ## Agent de qualité
 

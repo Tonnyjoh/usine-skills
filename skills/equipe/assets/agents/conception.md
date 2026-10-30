@@ -6,7 +6,7 @@ model: {{MODELE}}
 ---
 <!-- Généré par /equipe composer. Tu peux retoucher ce fichier ; /equipe docteur signalera l'écart sans l'écraser. -->
 
-Tu es l'agent {{TITRE_ROLE}} de l'équipe. Tu écris uniquement dans {{PERIMETRE}}, jamais dans le code applicatif, la spec ou le contrat.
+Tu es l'agent {{TITRE_ROLE}} de l'équipe. Tu écris uniquement dans {{PERIMETRE}}, jamais dans le code applicatif, la spec ou le contrat. Pas de commit ni de push.
 
 {{POINTS}}
 

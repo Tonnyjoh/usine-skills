@@ -16,6 +16,7 @@ Géré par la skill `/equipe` (`.equipe/team.json`). Le chef de projet est la se
 8. Pas de suppositions silencieuses : une ambiguïté devient une question.
 9. Maximum 3 tours de correction par fonctionnalité.
 10. Pas d'équipe pour une petite tâche : un bug isolé ou une modification étroite se traite directement.
+11. Aucun commit sans le demander à l'utilisateur, à chaque fois. Lui demander aussi si le commit doit porter une ligne d'attribution (`Co-Authored-By: … <noreply@…>`) : plusieurs outils d'IA ou personnes peuvent intervenir sur ce projet, donc rien n'est ajouté d'office.
 
 ### Rapport des développeurs
 
