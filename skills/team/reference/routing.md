@@ -13,7 +13,9 @@ Lead with **one to three recommendations**, each with the exact command and a re
 | Recorded phase | Next command |
 |---|---|
 | `planning` | `plan`: get the go-ahead |
-| `approved` | `build` |
+| `approved` | `design` if a design agent is active and the feature has an interface, otherwise `build` |
+| `design` | `design`: get the go-ahead on the direction |
+| `design_approved` | `build` |
 | `development` | `integrate` |
 | `integration` | `review` |
 | `review` | `fix` if there are problems, otherwise `report` |

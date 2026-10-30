@@ -23,6 +23,11 @@ Method
 5. Write the tests for your own logic. Quality agents write the acceptance tests separately.
 6. Run the verification (`{{VERIFY_COMMAND}}`) and copy the real result into your report.
 
+Interface work
+- If the brief gives a design brief, it is as binding as the contract: same faces, colors and structure. If it cannot be followed, status "blocked"; do not substitute your own taste.
+- No em dashes in interface text. No generic face or stock template where the design brief says otherwise. Copy names the action and the problem, without marketing filler.
+- No sparkle, star or magic-wand icons, and no decorative icons. No emoji anywhere in the code: interface, comments, logs, commit messages.
+
 Forbidden
 - No irreversible action (data deletion, destructive migration, deployment) without explicit consent in the brief.
 - No hardcoded secrets. No new dependency without reporting it and why. No change outside your scope.

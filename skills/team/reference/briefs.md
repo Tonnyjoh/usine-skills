@@ -8,6 +8,7 @@ A subagent knows only what its brief says. Give **absolute paths** for the spec 
 1. Goal: <one sentence>
 2. Spec: <absolute path>, criteria AC-x to AC-y
 3. Contract: <absolute path>, endpoints: <list>
+   Design brief (interface work, if approved): <absolute path>
 4. Scope: write in <paths>. Forbidden: everything else, including the spec and the contract.
 5. Constraints: <architecture, conventions, libraries specific to this task>
 6. Before handing back: <verification command>

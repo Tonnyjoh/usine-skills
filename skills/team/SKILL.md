@@ -1,9 +1,9 @@
 ---
 name: team
 description: Leads a configurable team of AI agents (backend, frontend, mobile, data, devops, tester, reviewer, security, UX, documentation) to ship a complete feature, from approved spec to final report, with an API contract, file scopes and independent checks. Use whenever the user wants a team of agents, specialized subagents, an AI project lead, multi-agent or parallel development, or a feature that spans several parts of a project (API + interface, web + mobile), even without saying "team". Also use to add agents to a project, compose or change a team, write a spec and contract before coding, or resume a delivery in progress. Not for an isolated bug or a narrow change, which are handled directly.
-version: 0.2.0
+version: 0.3.0
 user-invocable: true
-argument-hint: "[add front test back… · compose · plan|build|integrate|review|fix|report · ship · status|doctor] [feature]"
+argument-hint: "[add front:next design test… · compose · plan|design|build|integrate|review|fix|report · ship · status|doctor] [feature]"
 license: MIT
 ---
 
@@ -38,9 +38,10 @@ A multi-agent system rarely fails for lack of talent. It fails because two agent
 
 | Command | Phase | Role | Reference |
 |---|---|---|---|
-| `add <agents>` | 0 | The shortest way: `add front test`, later `add back` | [add.md](reference/add.md) |
+| `add <agents>` | 0 | The shortest way: `add front:next design test`, later `add back` | [add.md](reference/add.md) |
 | `compose` | 0 | Compose a custom team, with questions | [compose.md](reference/compose.md) |
 | `plan [feature]` | 1-2 | Write the spec and contract, get the go-ahead | [plan.md](reference/plan.md) |
+| `design [feature]` | 2b | Set the visual direction from real references, get the go-ahead | [design.md](reference/design.md) |
 | `build [feature]` | 3 | Delegate to the developers | [build.md](reference/build.md) |
 | `integrate [feature]` | 4 | Bring it together, arbitrate, verify the whole | [integrate.md](reference/integrate.md) |
 | `review [feature]` | 5 | Run the independent checks | [review.md](reference/review.md) |
@@ -60,10 +61,11 @@ Routing:
 
 ## Mandatory stops
 
-Three moments belong to the user, and no chaining skips them:
+These moments belong to the user, and no chaining skips them:
 
 1. **After the team summary,** before creating a file. A simple "ok" is enough here.
 2. **After the spec and contract,** before delegating anything. The script refuses the development phase without a recorded go-ahead, and also refuses if the spec or contract changed since.
-3. **At the end,** before any commit, push, merge or deployment. For a commit, also ask about the attribution line.
+3. **After the design direction,** when a design agent is active and the feature has an interface, before any code.
+4. **At the end,** before any commit, push, merge or deployment. For a commit, also ask about the attribution line.
 
 The script's guardrail is not an obstacle to work around: if it blocks, report the code and what it means. Never edit `.team/` by hand to get past it.

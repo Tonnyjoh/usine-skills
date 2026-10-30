@@ -29,4 +29,6 @@ A tool's sandbox may refuse this command because it writes to `.git` (Codex does
 - **Model:** `model` concerns only Claude Code. A Codex agent inherits the session's model unless `codex_model` is set.
 - **Independent checks:** they require an agent with a blank context. Without real subagents, say so in the report.
 
+- **Seeing the design:** the design agent uses Claude in Chrome when it is connected and the site is permitted, in the user's real browser and read-only on public pages. Without a browser, it only has text and titles and must say so. The design agent file sets no tool list so that it inherits these tools.
+
 The `team` script needs only Python 3 and git, and depends on no tool.

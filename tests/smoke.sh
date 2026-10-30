@@ -122,6 +122,95 @@ for i in 1 2 3; do expect 0 round h; expect 0 advance h integration; done
 expect 3 round h                                 # fourth round refused
 expect 0 stop h --reason test
 
+# --- stack choice on an empty project
+mkdir -p "$T/empty"; cd "$T/empty"; git init -q -b main; git commit -q --allow-empty -m init
+expect 2 propose front:cobol
+python3 "$E" propose front | grep -q 'front:next' || { echo "FAIL: stack choices not offered"; failures=$((failures+1)); }
+expect 0 propose front:next test --write
+contains '"specialty": "Next.js"' .team/team.json
+
+# --- PHP: detection wins over the assets' package.json, and all stacks can be chosen
+mkdir -p "$T/lara"; cd "$T/lara"; git init -q -b main
+echo '{"require":{"laravel/framework":"^11"}}' > composer.json; touch artisan
+echo '{"name":"a","devDependencies":{"vue":"3","vite":"5"}}' > package.json
+expect 0 propose back --write
+contains '"specialty": "PHP / Laravel"' .team/team.json
+contains 'php artisan test' .team/team.json
+python3 "$E" propose front | grep -q 'OVERLAPPING_SCOPES' || { echo "FAIL: Laravel + Vue overlap not reported"; failures=$((failures+1)); }
+mkdir -p "$T/sym"; cd "$T/sym"; git init -q -b main
+echo '{"require":{"symfony/framework-bundle":"^7"}}' > composer.json
+expect 0 propose back --write
+contains '"specialty": "PHP / Symfony"' .team/team.json
+mkdir -p "$T/plain"; cd "$T/plain"; git init -q -b main
+echo '{"require":{"php":"^8.3"}}' > composer.json
+expect 0 propose back --write
+contains '"specialty": "PHP"' .team/team.json
+contains 'vendor/bin/phpunit' .team/team.json
+mkdir -p "$T/newphp"; cd "$T/newphp"; git init -q -b main
+expect 0 propose back:symfony --write
+contains '"specialty": "PHP / Symfony"' .team/team.json
+expect 0 scaffold
+contains 'Doctrine migrations' .claude/agents/backend.md
+
+# --- design agent: gates, brief lock, anti-generic check
+mkdir -p "$T/ui/src" "$T/ui/tests"; cd "$T/ui"; git init -q -b main
+echo '{"name":"ui","scripts":{"test":"node -e 0"},"dependencies":{"next":"15"}}' > package.json
+echo 'export const a = 1' > src/a.js
+git add -A; git commit -qm init
+expect 0 propose front design test --write
+expect 0 scaffold
+contains 'name: design' .claude/agents/design.md
+if grep -q '^tools:' .claude/agents/design.md; then echo "FAIL: design must inherit browser tools"; failures=$((failures+1)); fi
+if grep -rl $'—' .claude/agents CLAUDE.md; then echo "FAIL: em dash in generated files"; failures=$((failures+1)); fi
+expect 0 start p
+mkdir -p docs/specs docs/design; printf -- '- Status: d\n- AC-1: a\n' > docs/specs/p.md
+expect 0 approve p --quote go
+expect 2 advance p development                   # design pending
+expect 0 advance p design
+expect 2 approve-design p --quote go             # no brief
+printf '# Brief\n## References\nnone\n' > docs/design/p.md
+expect 2 approve-design p --quote go             # no consulted reference
+printf '# Brief\n## References\n- https://www.awwwards.com/x: rhythm\n' > docs/design/p.md
+expect 0 approve-design p --quote go
+expect 0 advance p development
+echo 'export const t = "Fast — simple"' > src/dash.js
+printf 'body { font-family: "Inter", sans-serif; }\n' > src/a.css
+printf 'import { Inter } from "next/font/google"\n' > src/font.js
+printf 'body { font-family: "Canela", Arial, sans-serif; }\n' > src/ok.css
+printf 'import { Sparkles } from "lucide-react"\n' > src/icon.js
+printf 'console.log("done \xe2\x9c\xa8")\n' > src/emoji.js
+printf '# ok \xf0\x9f\x9a\x80\n' > src/worker.py
+printf 'export const stars = "Stars are bright"\nimport { Star } from "lucide-react"\n' > src/fine.js
+expect 0 scope-check frontend --feature p
+expect 0 advance p integration
+expect 0 verify p --all
+expect 0 advance p review
+python3 "$E" design-check --feature p > "$T/check.json"; c=$?
+[ "$c" = 2 ] || { echo "FAIL: design-check should block ($c)"; failures=$((failures+1)); }
+python3 - "$T/check.json" <<'P' || { echo "FAIL: wrong design-check findings"; failures=$((failures+1)); }
+import json, sys
+f = json.load(open(sys.argv[1]))["findings"]
+assert sorted({(x["rule"], x["file"]) for x in f}) == [("ai-icon", "src/icon.js"), ("em-dash", "src/dash.js"), ("emoji", "src/emoji.js"), ("emoji", "src/worker.py"), ("generic-font", "src/a.css"), ("generic-font", "src/font.js")], f
+P
+expect 2 advance p done                          # design check failed
+rm src/dash.js src/a.css src/font.js src/icon.js src/emoji.js src/worker.py
+expect 0 verify p --all
+expect 0 design-check --feature p
+expect 0 advance p done
+python3 - <<'P'
+import json
+d = json.load(open(".team/team.json")); d["project"]["design"] = {"allowed_fonts": ["Inter"]}
+json.dump(d, open(".team/team.json", "w"), ensure_ascii=False, indent=2)
+P
+printf 'body { font-family: Inter; }\n' > src/pinned.css
+expect 0 design-check                            # a pinned font is allowed
+
+# --- no interface: the design phase can be skipped, with a reason
+expect 0 start q
+printf -- '- Status: d\n- AC-1: a\n' > docs/specs/q.md
+expect 0 approve q --quote go
+expect 0 advance q development --no-interface "background job"
+
 # --- no team, home folder
 cd "$T"; expect 2 scaffold
 HOME="$T/app" bash -c "cd '$T/app' && rm -rf .team && python3 '$E' context" | grep -q NOT_A_PROJECT || { echo "FAIL: home folder not detected"; failures=$((failures+1)); }
