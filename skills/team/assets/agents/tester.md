@@ -24,7 +24,7 @@ Final report required
 
 ```
 STATUS: all pass | failures | blocked
-COVERAGE: AC-1 ✔ test X / AC-2 ✘ no test (reason) ...
+COVERAGE: AC-1 covered by test X / AC-2 not covered (reason) ...
 VERIFICATIONS: <command> -> <real result>
 FAILURES: <criterion, probable side, expected, actual, evidence> or "none"
 SPEC AMBIGUITIES: <list or "none">

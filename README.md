@@ -14,6 +14,20 @@ The skill reads the project, deduces the stack and test commands, shows you a ta
 /team add back
 ```
 
+To choose the stack yourself, or on an empty project:
+
+```
+/team add front:next design test
+```
+
+## Design agent
+
+`design` keeps the interface from looking like generic AI output. Before any code, it studies real references on Awwwards and Dribbble, then writes a visual direction that you approve. After the build, it reviews the result against that direction.
+
+- **With impeccable:** it uses the [impeccable](https://impeccable.style) skill if installed, and works without it.
+- **With Claude in Chrome:** it sees the references for real when the extension is connected and the site is permitted, read-only on public pages. Otherwise it has only text and titles, and says so.
+- **`team design-check`:** blocks the delivery on em dashes in interface text, emoji anywhere in the code, sparkle and magic-wand icons, and generic fonts (Inter, Roboto, Open Sans, Poppins, Arial, Geist, Fraunces, Plus Jakarta Sans, Space Grotesk). A font your project chose goes in `project.design.allowed_fonts`.
+
 ## Installation
 
 As a plugin:
@@ -57,17 +71,18 @@ Two ways to use it, depending on the size of the task.
 **A complete feature:** `/team ship invoice-export` chains everything, stopping when the decision is yours:
 
 1. Spec and API contract, then **your go-ahead**
-2. Development, in parallel if the scopes allow it
-3. Integration and verifications
-4. Independent checks: tester, reviewer, security
-5. Three fix rounds at most
-6. Report, then **your decision** to commit or not
+2. With a design agent: visual direction, then **your go-ahead**
+3. Development, in parallel if the scopes allow it
+4. Integration and verifications
+5. Independent checks: tester, reviewer, security, design
+6. Three fix rounds at most
+7. Report, then **your decision** to commit or not
 
 | Command | Role |
 |---|---|
-| `add <agents>` | Add agents: `front`, `back`, `mobile`, `data`, `devops`, `test`, `review`, `security`, `ux`, `doc` |
+| `add <agents>` | Add agents: `front`, `back`, `mobile`, `data`, `devops`, `design`, `test`, `review`, `security`, `ux`, `doc`. Stack after a colon: `front:next`, `back:nest` |
 | `compose` | Compose a custom team, with questions |
-| `plan`, `build`, `integrate`, `review`, `fix`, `report` | Run a single phase |
+| `plan`, `design`, `build`, `integrate`, `review`, `fix`, `report` | Run a single phase |
 | `ship <feature>` | Chain everything |
 | `status` | See where a feature stands |
 | `doctor` | Spot gaps between the declared team and the project |
@@ -94,7 +109,7 @@ It never replaces an existing file without showing you the diff.
 | `.team/team.json` | The team: the only thing to edit to change it |
 | `.team/features/` | The state of each feature |
 | `.claude/agents/*.md` | The generated agents, which you can edit |
-| `docs/specs/`, `docs/api/openapi.yaml` | Specs and contract |
+| `docs/specs/`, `docs/api/openapi.yaml`, `docs/design/` | Specs, contract and design directions |
 | `CLAUDE.md` | "Agent team" section |
 
 ## Tests
@@ -125,7 +140,21 @@ Le skill lit le projet, déduit la stack et les commandes de test, te montre un 
 /team add back
 ```
 
+Pour choisir toi-même la stack, ou sur un projet vide :
+
+```
+/team add front:next design test
+```
+
 Les commandes sont en anglais, mais tu peux parler à Claude en français : il te répond dans ta langue.
+
+## L'agent design
+
+`design` évite que l'interface ressemble à une sortie d'IA générique. Avant tout code, il étudie de vraies références sur Awwwards et Dribbble, puis rédige une direction visuelle que tu valides. Après la construction, il contrôle le résultat par rapport à cette direction.
+
+- **Avec impeccable :** il utilise le skill [impeccable](https://impeccable.style) s'il est installé, et fonctionne sans.
+- **Avec Claude in Chrome :** il voit réellement les références quand l'extension est connectée et le site autorisé, en lecture seule sur des pages publiques. Sinon, il n'a que du texte et des titres, et il le dit.
+- **`team design-check` :** bloque la livraison en cas de cadratins dans les textes d'interface, d'emoji dans le code, d'icônes d'étincelles ou de baguette magique, et de polices génériques (Inter, Roboto, Open Sans, Poppins, Arial, Geist, Fraunces, Plus Jakarta Sans, Space Grotesk). Une police choisie par ton projet se déclare dans `project.design.allowed_fonts`.
 
 ## Installation
 
@@ -170,17 +199,18 @@ Deux façons de s'en servir, selon la taille de la tâche.
 **Une fonctionnalité complète :** `/team ship invoice-export` enchaîne tout, en s'arrêtant quand la décision te revient :
 
 1. Spec et contrat d'API, puis **ton feu vert**
-2. Développement, en parallèle si les périmètres le permettent
-3. Intégration et vérifications
-4. Contrôles indépendants : testeur, relecteur, sécurité
-5. Trois tours de correction au maximum
-6. Compte rendu, puis **ta décision** de committer ou non
+2. Avec un agent design : direction visuelle, puis **ton feu vert**
+3. Développement, en parallèle si les périmètres le permettent
+4. Intégration et vérifications
+5. Contrôles indépendants : testeur, relecteur, sécurité, design
+6. Trois tours de correction au maximum
+7. Compte rendu, puis **ta décision** de committer ou non
 
 | Commande | Rôle |
 |---|---|
-| `add <agents>` | Ajouter des agents : `front`, `back`, `mobile`, `data`, `devops`, `test`, `review`, `security`, `ux`, `doc` |
+| `add <agents>` | Ajouter des agents : `front`, `back`, `mobile`, `data`, `devops`, `design`, `test`, `review`, `security`, `ux`, `doc`. Stack après deux-points : `front:next`, `back:nest` |
 | `compose` | Composer une équipe sur mesure, avec questions |
-| `plan`, `build`, `integrate`, `review`, `fix`, `report` | Lancer une phase seule |
+| `plan`, `design`, `build`, `integrate`, `review`, `fix`, `report` | Lancer une phase seule |
 | `ship <feature>` | Tout enchaîner |
 | `status` | Voir où en est une fonctionnalité |
 | `doctor` | Repérer les écarts entre l'équipe déclarée et le projet |
@@ -207,7 +237,7 @@ Il ne remplace jamais un fichier existant sans te montrer le diff.
 | `.team/team.json` | L'équipe : la seule chose à modifier pour la changer |
 | `.team/features/` | L'état de chaque fonctionnalité |
 | `.claude/agents/*.md` | Les agents générés, que tu peux retoucher |
-| `docs/specs/`, `docs/api/openapi.yaml` | Specs et contrat |
+| `docs/specs/`, `docs/api/openapi.yaml`, `docs/design/` | Specs, contrat et directions visuelles |
 | `CLAUDE.md` | Section « Agent team » |
 
 ## Tests

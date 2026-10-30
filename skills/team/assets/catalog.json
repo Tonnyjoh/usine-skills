@@ -6,6 +6,8 @@
     "Python / FastAPI": "Pydantic models aligned with the contract, thin routers, dependency injection, exception handlers matching the `Error` schema. pytest tests. Type annotations.",
     "Python / Django": "Models and DRF serializers aligned with the contract, thin views, logic in services. Versioned migrations. pytest-django tests.",
     "PHP / Laravel": "Thin controllers, FormRequest for validation, API resources aligned with the contract, services for business logic. Migrations. Pest or PHPUnit tests.",
+    "PHP / Symfony": "Thin controllers, services autowired through the container, DTOs and Validator constraints aligned with the contract, an exception listener matching the `Error` schema. Doctrine migrations. PHPUnit tests.",
+    "PHP": "Follow the project's structure and PSR-12. Thin entry points, logic in testable classes, prepared statements only, input validated at the boundary, errors matching the `Error` schema. PHPUnit tests.",
     ".NET / ASP.NET Core": "Thin controllers or minimal endpoints, DTOs aligned with the contract, application services, error middleware matching the `Error` schema. xUnit tests.",
     "Go": "Small cohesive packages, consumer-side interfaces, explicit errors, thin handlers. Table-driven tests."
   },
@@ -14,6 +16,8 @@
     "Next.js": "App Router or Pages according to what exists (do not mix), deliberate server/client components, server-side data when relevant. Testing Library tests.",
     "Angular": "Standalone components if the project uses them, services for HTTP calls typed from the contract, controlled RxJS (unsubscribing), reactive forms. Jasmine/Karma or Jest tests according to what exists.",
     "Vue / Nuxt": "Composition API, composables for shared logic, store (Pinia) only if needed. Vitest + Vue Test Utils tests.",
+    "SvelteKit": "Runes or stores according to the Svelte version in use, server `load` functions for data, API layer typed from the contract. Vitest + Testing Library tests.",
+    "Astro": "Static by default, islands only where interaction requires it, content collections for content, API layer typed from the contract. Vitest tests where there is logic.",
     "Flutter": "Small widgets, separation of presentation and state, API client generated or typed from the contract, explicit handling of loading and error states. Widget and unit tests.",
     "React Native": "Function components, navigation according to what exists, API layer typed from the contract, offline states if the spec requires them. Jest + Testing Library tests.",
     "Kotlin / Jetpack Compose": "Stateless composables when possible, ViewModel + StateFlow for state, Retrofit client typed from the contract, explicit screen states. ViewModel unit tests.",

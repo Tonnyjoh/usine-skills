@@ -17,6 +17,7 @@ Managed by the `/team` skill (`.team/team.json`). The project lead is the main s
 9. At most 3 fix rounds per feature.
 10. No team for a small task: an isolated bug or a narrow change is handled directly.
 11. No commit without asking the user, every time. Also ask whether the commit should carry an attribution line (`Co-Authored-By: … <noreply@…>`): several AI tools or people may work on this project, so nothing is added by default. Commit messages are written in English.
+12. No generic AI look: no em dashes in interface text, no generic default font unless the project chose it, no sparkle, star or magic-wand icons, and no emoji anywhere in the code, comments, logs or commit messages. `team design-check` enforces what it can detect.
 
 ### Developer report
 

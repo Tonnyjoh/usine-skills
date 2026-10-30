@@ -8,15 +8,27 @@ The short way: the user names the agents they want, you deduce the rest from the
 team propose front test
 ```
 
-Known names: `front`, `back`, `mobile`, `data`, `devops`, `test`, `review`, `security`, `ux`, `doc`.
+Known names: `front`, `back`, `mobile`, `data`, `devops`, `design`, `test`, `review`, `security`, `ux`, `doc`.
 
-Nothing is written at this stage.
+To choose the stack, add it after a colon: `front:next`, `back:nest`. The choice wins over what the repository suggests, and an empty project needs one.
+
+| Agent | Stacks |
+|---|---|
+| `front` | `next`, `react`, `angular`, `vue`, `nuxt`, `svelte`, `astro` |
+| `back` | `nest`, `express`, `spring`, `fastapi`, `django`, `laravel`, `symfony`, `php`, `dotnet`, `go` |
+| `mobile` | `flutter`, `rn`, `compose`, `swiftui` |
+| `data` | `postgres`, `mysql`, `mongo`, `oracle` |
+| `devops` | `docker`, `actions`, `gitlab`, `k8s`, `terraform` |
+
+If the user gave no stack and `to_confirm` asks for one, ask with these choices, deduced stack first. Nothing is written at this stage.
 
 ## 2. Confirm
 
 Show `table` once and ask for a simple agreement. Ask a question only for what appears in `to_confirm` or `problems`: those are the cases the repository cannot settle, and a team with no verification command could prove nothing.
 
 If those questions change the proposal, edit `.team/team.json` afterwards (see its format in [compose.md](compose.md)).
+
+A Laravel or Symfony project with Vue or React in the same folder gives `OVERLAPPING_SCOPES` for `add back front`: ask where the frontend lives (`resources/js`, `assets`) and narrow both scopes in `.team/team.json`.
 
 From the second developer on, a contract becomes mandatory and `propose` adds its path: say so in one sentence, because this is what lets front and back work without stepping on each other.
 

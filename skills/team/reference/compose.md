@@ -69,7 +69,7 @@ Quality and design specialties, to offer if the role is active:
 
 What matters:
 
-- `role` is `developer`, `tester`, `reviewer`, `security`, `ux` or `documentation`. Several agents can share a role (`backend-api`, `backend-worker`) if their scopes are disjoint.
+- `role` is `developer`, `tester`, `reviewer`, `security`, `design`, `ux` or `documentation`. `design` sets the visual direction ([design.md](design.md)); `ux` only writes notes. Several agents can share a role (`backend-api`, `backend-worker`) if their scopes are disjoint.
 - `scope` and the `project` paths are **relative to the project root**. `verification` runs in `repo`.
 - Outside the catalog, `specialty` is `other: ...`: explore the repository, write `instructions` from the actual conventions and ask for confirmation. Add `purpose` if the agent's name does not say what it implements ("the mailing service", for example).
 - `contract` can be `null` only with a single developer and no API involved.
