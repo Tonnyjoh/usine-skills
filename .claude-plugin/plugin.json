@@ -1,0 +1,8 @@
+{
+  "name": "equipe",
+  "version": "0.1.0",
+  "description": "Une équipe d'agents configurable pour Claude Code : front, back, test… avec spec validée, contrat d'API, périmètres contrôlés et vérifications réellement exécutées.",
+  "author": { "name": "Tonnyjoh" },
+  "repository": "https://github.com/Tonnyjoh/usine-skills",
+  "license": "MIT"
+}
