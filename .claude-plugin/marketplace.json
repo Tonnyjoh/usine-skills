@@ -1,12 +1,12 @@
 {
   "name": "usine-skills",
   "owner": { "name": "Tonnyjoh" },
-  "description": "Une équipe d'agents configurable pour Claude Code.",
+  "description": "A configurable team of agents for Claude Code.",
   "plugins": [
     {
-      "name": "equipe",
+      "name": "team",
       "source": "./",
-      "description": "Une équipe d'agents configurable pour Claude Code : front, back, test… avec spec validée, contrat d'API, périmètres contrôlés et vérifications réellement exécutées."
+      "description": "A configurable team of agents for Claude Code: front, back, test… with an approved spec, an API contract, checked scopes and verifications that really run."
     }
   ]
 }

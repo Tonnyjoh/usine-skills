@@ -1,0 +1,36 @@
+{
+  "backend": {
+    "Java / Spring Boot": "Clean architecture: domain / application / infrastructure / web. Domain independent of Spring. No business logic in controllers. Validation through Bean Validation, errors through a global handler matching the contract's `Error` schema. JUnit 5 + Mockito tests, integration tests with Spring Boot Test.",
+    "Node.js / NestJS": "Modules, controllers, services and providers; validated DTOs (class-validator); exception filters matching the `Error` schema. Jest tests. Strict TypeScript.",
+    "Node.js / Express": "Thin routes, logic in services, input validation (zod or equivalent), error middleware matching the `Error` schema. Jest or Vitest tests.",
+    "Python / FastAPI": "Pydantic models aligned with the contract, thin routers, dependency injection, exception handlers matching the `Error` schema. pytest tests. Type annotations.",
+    "Python / Django": "Models and DRF serializers aligned with the contract, thin views, logic in services. Versioned migrations. pytest-django tests.",
+    "PHP / Laravel": "Thin controllers, FormRequest for validation, API resources aligned with the contract, services for business logic. Migrations. Pest or PHPUnit tests.",
+    ".NET / ASP.NET Core": "Thin controllers or minimal endpoints, DTOs aligned with the contract, application services, error middleware matching the `Error` schema. xUnit tests.",
+    "Go": "Small cohesive packages, consumer-side interfaces, explicit errors, thin handlers. Table-driven tests."
+  },
+  "frontend_mobile": {
+    "React": "Function components and hooks, local state first, API calls isolated in a dedicated layer typed from the contract. Testing Library tests. Strict TypeScript.",
+    "Next.js": "App Router or Pages according to what exists (do not mix), deliberate server/client components, server-side data when relevant. Testing Library tests.",
+    "Angular": "Standalone components if the project uses them, services for HTTP calls typed from the contract, controlled RxJS (unsubscribing), reactive forms. Jasmine/Karma or Jest tests according to what exists.",
+    "Vue / Nuxt": "Composition API, composables for shared logic, store (Pinia) only if needed. Vitest + Vue Test Utils tests.",
+    "Flutter": "Small widgets, separation of presentation and state, API client generated or typed from the contract, explicit handling of loading and error states. Widget and unit tests.",
+    "React Native": "Function components, navigation according to what exists, API layer typed from the contract, offline states if the spec requires them. Jest + Testing Library tests.",
+    "Kotlin / Jetpack Compose": "Stateless composables when possible, ViewModel + StateFlow for state, Retrofit client typed from the contract, explicit screen states. ViewModel unit tests.",
+    "Swift / SwiftUI": "Light views, state through `@State`/`@Observable` according to the target version, network layer typed from the contract. XCTest tests."
+  },
+  "data": {
+    "PostgreSQL": "Versioned migrations, never edit a migration already applied. Explicit constraints and indexes, parameterized queries. Any destructive migration requires explicit consent.",
+    "MySQL": "Versioned migrations, never edit a migration already applied. Beware of locks on ALTER, parameterized queries. Any destructive migration requires explicit consent.",
+    "MongoDB": "Schemas validated in the database or application, indexes justified by queries, idempotent migration scripts. Any data deletion requires explicit consent.",
+    "Oracle": "Versioned migrations (Flyway or Liquibase according to what exists), explicit sequences and constraints, parameterized queries. Any destructive migration requires explicit consent."
+  },
+  "devops": {
+    "Docker": "Multi-stage images, non-root user, secrets only through environment variables. Never deploy for real without explicit consent.",
+    "GitHub Actions": "Actions pinned to a version, minimal permissions, secrets through the repository vault. Never deploy for real without explicit consent.",
+    "GitLab CI": "Small cached stages, protected variables for secrets. Never deploy for real without explicit consent.",
+    "Kubernetes": "Declarative manifests, resources and probes set, secrets outside the repository. Apply nothing on a cluster without explicit consent.",
+    "Terraform": "Small modules, remote state, `plan` only; `apply` and `destroy` require explicit consent.",
+    "Docker + GitHub Actions": "Multi-stage images and non-root user; pinned actions, minimal permissions, secrets through the repository vault. Never deploy for real without explicit consent."
+  }
+}

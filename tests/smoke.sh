@@ -1,128 +1,129 @@
 #!/usr/bin/env bash
-# Parcours complet du script sur des projets jetables. Sort en erreur au premier écart.
+# Full run of the script on throwaway projects. Exits with an error on any mismatch.
 set -u
-E="$(cd "$(dirname "$0")/.." && pwd)/skills/equipe/scripts/equipe"
+E="$(cd "$(dirname "$0")/.." && pwd)/skills/team/scripts/team"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
-echecs=0
-attend() { # code attendu, puis commande
-  local voulu=$1; shift
-  local sortie; sortie=$(python3 "$E" "$@" 2>&1); local c=$?
-  if [ "$c" != "$voulu" ]; then echo "ÉCHEC : equipe $* -> $c (attendu $voulu)"; echo "$sortie" | head -8; echecs=$((echecs+1)); else echo "ok    : equipe $*"; fi
+failures=0
+expect() { # expected code, then command
+  local wanted=$1; shift
+  local output; output=$(python3 "$E" "$@" 2>&1); local c=$?
+  if [ "$c" != "$wanted" ]; then echo "FAIL: team $* -> $c (expected $wanted)"; echo "$output" | head -8; failures=$((failures+1)); else echo "ok  : team $*"; fi
 }
-contient() { # texte, fichier
-  grep -q -- "$1" "$2" || { echo "ÉCHEC : « $1 » absent de $2"; echecs=$((echecs+1)); }
+contains() { # text, file
+  grep -q -- "$1" "$2" || { echo "FAIL: '$1' missing from $2"; failures=$((failures+1)); }
 }
 
-# --- un développeur, un testeur, dans l'arbre courant
+# --- one developer, one tester, in the current tree
 mkdir -p "$T/app/src" "$T/app/tests"; cd "$T/app"; git init -q -b main
 echo '{"name":"demo","scripts":{"test":"node tests/ok.js"},"dependencies":{"next":"15","react":"19"}}' > package.json
 echo 'console.log("ok")' > tests/ok.js; echo 'export const a=1' > src/a.js
 git add -A; git commit -qm init
-attend 2 proposer            # au moins un agent
-attend 2 proposer licorne
-attend 0 proposer front test
-[ ! -e .equipe/team.json ] || { echo "ÉCHEC : proposer a écrit sans --ecrire"; echecs=$((echecs+1)); }
-attend 0 proposer front test --ecrire
-attend 0 scaffold
-contient 'name: frontend' .claude/agents/frontend.md
-if grep -l '{{' .claude/agents/*.md CLAUDE.md; then echo "ÉCHEC : gabarit non résolu"; echecs=$((echecs+1)); fi
-contient 'noreply' CLAUDE.md
-[ ! -e AGENTS.md ] && [ ! -e .codex ] || { echo "ÉCHEC : fichiers d'autres outils créés par défaut"; echecs=$((echecs+1)); }
-echo 'retouche' >> .claude/agents/frontend.md
-attend 0 scaffold
-contient 'retouche' .claude/agents/frontend.md   # jamais écrasé
+expect 2 propose            # at least one agent
+expect 2 propose unicorn
+expect 0 propose front test
+[ ! -e .team/team.json ] || { echo "FAIL: propose wrote without --write"; failures=$((failures+1)); }
+expect 0 propose front test --write
+expect 0 scaffold
+contains 'name: frontend' .claude/agents/frontend.md
+if grep -l '{{' .claude/agents/*.md CLAUDE.md; then echo "FAIL: unresolved template"; failures=$((failures+1)); fi
+contains 'noreply' CLAUDE.md
+contains 'written in English' CLAUDE.md
+[ ! -e AGENTS.md ] && [ ! -e .codex ] || { echo "FAIL: other tools' files created by default"; failures=$((failures+1)); }
+echo 'edited' >> .claude/agents/frontend.md
+expect 0 scaffold
+contains 'edited' .claude/agents/frontend.md     # never overwritten
 sed -i '$d' .claude/agents/frontend.md
-attend 0 demarrer f
-attend 2 avancer f developpement                 # pas de feu vert
-mkdir -p docs/specs; printf -- '- Statut : brouillon\n' > docs/specs/f.md
-attend 2 approuver f --citation go               # pas de CA-1
-printf -- '- Statut : brouillon\n- CA-1 : a\n' > docs/specs/f.md
-attend 0 approuver f --citation go
-contient 'validée' docs/specs/f.md
-attend 0 avancer f developpement
+expect 0 start f
+expect 2 advance f development                   # no go-ahead
+mkdir -p docs/specs; printf -- '- Status: draft\n' > docs/specs/f.md
+expect 2 approve f --quote go                    # no AC-1
+printf -- '- Status: draft\n- AC-1: a\n' > docs/specs/f.md
+expect 0 approve f --quote go
+contains 'Status: approved' docs/specs/f.md
+expect 0 advance f development
 echo 'export const b=2' > src/b.js
-attend 0 scope-check frontend --fonctionnalite f
+expect 0 scope-check frontend --feature f
 echo x > src/c.js
-attend 2 scope-check testeur --fonctionnalite f  # code applicatif touché par le testeur
-attend 0 avancer f integration
-attend 2 avancer f controles                     # vérifications non lancées
-attend 0 verify f --tout
-attend 0 avancer f controles
+expect 2 scope-check tester --feature f          # application code touched by the tester
+expect 0 advance f integration
+expect 2 advance f review                        # verifications not run
+expect 0 verify f --all
+expect 0 advance f review
 echo 'export const d=3' > src/d.js
-attend 2 avancer f termine                       # vérification périmée
-attend 0 verify f --tout
-echo '- CA-2 : b' >> docs/specs/f.md
-attend 2 avancer f termine                       # spec changée après accord
+expect 2 advance f done                          # stale verification
+expect 0 verify f --all
+echo '- AC-2: b' >> docs/specs/f.md
+expect 2 advance f done                          # spec changed after approval
 sed -i '$d' docs/specs/f.md
-attend 0 avancer f termine
+expect 0 advance f done
 
-# --- commande de vérification en échec
+# --- failing verification command
 sed -i 's/console.log("ok")/process.exit(1)/' tests/ok.js
-attend 0 demarrer g
-printf -- '- Statut : b\n- CA-1 : a\n' > docs/specs/g.md
-attend 0 approuver g --citation go
-attend 0 avancer g developpement
-attend 0 avancer g integration
-attend 2 verify g --tout
-attend 2 avancer g controles
+expect 0 start g
+printf -- '- Status: d\n- AC-1: a\n' > docs/specs/g.md
+expect 0 approve g --quote go
+expect 0 advance g development
+expect 0 advance g integration
+expect 2 verify g --all
+expect 2 advance g review
 
-# --- ajout d'un backend : contrat obligatoire, testeur étendu, worktrees
+# --- adding a backend: mandatory contract, extended tester, Codex, worktrees
 mkdir -p "$T/mono/front" "$T/mono/back"; cd "$T/mono"; git init -q -b main
 echo '{"name":"f","scripts":{"test":"node -e 0"},"dependencies":{"react":"19"}}' > front/package.json
 echo '{"name":"b","scripts":{"test":"node -e 0"},"dependencies":{"express":"4"}}' > back/package.json
 git add -A; git commit -qm init
-attend 0 proposer front test --ecrire
-attend 0 scaffold
-attend 0 proposer back --ecrire
-contient '"contrat": "docs/api/openapi.yaml"' .equipe/team.json
-contient 'cd back' .equipe/team.json
+expect 0 propose front test --write
+expect 0 scaffold
+expect 0 propose back --write
+contains '"contract": "docs/api/openapi.yaml"' .team/team.json
+contains 'cd back' .team/team.json
 python3 - <<'P'
 import json
-d = json.load(open(".equipe/team.json")); d["projet"]["outils"] = ["claude", "codex"]
-json.dump(d, open(".equipe/team.json", "w"), ensure_ascii=False, indent=2)
+d = json.load(open(".team/team.json")); d["project"]["tools"] = ["claude", "codex"]
+json.dump(d, open(".team/team.json", "w"), ensure_ascii=False, indent=2)
 P
-attend 0 scaffold --ecraser CLAUDE.md --ecraser .claude/agents/testeur.md
-contient 'backend' CLAUDE.md
-contient 'noreply' AGENTS.md                     # la règle des commits atteint les autres outils
-contient 'name = "backend"' .codex/agents/backend.toml
-python3 - <<'P' || { echo "ÉCHEC : TOML Codex invalide"; echecs=$((echecs+1)); }
+expect 0 scaffold --overwrite CLAUDE.md --overwrite .claude/agents/tester.md
+contains 'backend' CLAUDE.md
+contains 'noreply' AGENTS.md                     # the commit rule reaches other tools
+contains 'name = "backend"' .codex/agents/backend.toml
+python3 - <<'P' || { echo "FAIL: invalid Codex TOML"; failures=$((failures+1)); }
 import glob, tomllib
 for f in glob.glob(".codex/agents/*.toml"):
     d = tomllib.load(open(f, "rb"))
     assert d["name"] and d["description"] and d["developer_instructions"], f
     assert "<!--" not in d["developer_instructions"] and "model" not in d, f
 P
-attend 0 doctor
-git add -A; git commit -qm equipe
-attend 0 demarrer h
-printf -- '- Statut : b\n- CA-1 : a\n' > docs/specs/h.md
-attend 0 approuver h --citation go
-python3 "$E" preflight h | grep -q '"mode": "worktree"' || { echo "ÉCHEC : mode worktree attendu"; echecs=$((echecs+1)); }
-git worktree add -q -b avant ../wt-avant HEAD   # part d'avant la branche de travail
+expect 0 doctor
+git add -A; git commit -qm team
+expect 0 start h
+printf -- '- Status: d\n- AC-1: a\n' > docs/specs/h.md
+expect 0 approve h --quote go
+python3 "$E" preflight h | grep -q '"mode": "worktree"' || { echo "FAIL: worktree mode expected"; failures=$((failures+1)); }
+git worktree add -q -b before ../wt-before HEAD  # starts before the next commit
 git add -A; git commit -qm spec
-attend 0 avancer h developpement
-tete=$(git rev-parse HEAD)
+expect 0 advance h development
+head=$(git rev-parse HEAD)
 git worktree add -q -b wt-front ../wt-front HEAD
-echo 1 > ../wt-front/front/x.js                  # le travail reste non committé
-attend 0 scope-check frontend --worktree ../wt-front
-python3 "$E" scope-check frontend --worktree ../wt-avant | grep -q base_divergente || { echo "ÉCHEC : base divergente non vue"; echecs=$((echecs+1)); }
-attend 2 appliquer frontend --worktree ../wt-avant
-git worktree add -q -b wt-mal ../wt-mal HEAD
-echo 1 > ../wt-mal/back/y.js
-attend 2 scope-check frontend --worktree ../wt-mal
-attend 2 appliquer frontend --worktree ../wt-mal
-[ ! -e back/y.js ] || { echo "ÉCHEC : hors périmètre appliqué"; echecs=$((echecs+1)); }
-attend 0 appliquer frontend --worktree ../wt-front
-[ -e front/x.js ] || { echo "ÉCHEC : travail non reporté"; echecs=$((echecs+1)); }
-[ "$(git rev-parse HEAD)" = "$tete" ] || { echo "ÉCHEC : un commit a été créé"; echecs=$((echecs+1)); }
-attend 0 avancer h integration
-for i in 1 2 3; do attend 0 tour h; attend 0 avancer h integration; done
-attend 3 tour h                                  # quatrième tour refusé
-attend 0 arreter h --raison test
+echo 1 > ../wt-front/front/x.js                  # the work stays uncommitted
+expect 0 scope-check frontend --worktree ../wt-front
+python3 "$E" scope-check frontend --worktree ../wt-before | grep -q diverged_base || { echo "FAIL: diverged base not seen"; failures=$((failures+1)); }
+expect 2 apply frontend --worktree ../wt-before
+git worktree add -q -b wt-bad ../wt-bad HEAD
+echo 1 > ../wt-bad/back/y.js
+expect 2 scope-check frontend --worktree ../wt-bad
+expect 2 apply frontend --worktree ../wt-bad
+[ ! -e back/y.js ] || { echo "FAIL: out-of-scope work applied"; failures=$((failures+1)); }
+expect 0 apply frontend --worktree ../wt-front
+[ -e front/x.js ] || { echo "FAIL: work not carried over"; failures=$((failures+1)); }
+[ "$(git rev-parse HEAD)" = "$head" ] || { echo "FAIL: a commit was created"; failures=$((failures+1)); }
+expect 0 advance h integration
+for i in 1 2 3; do expect 0 round h; expect 0 advance h integration; done
+expect 3 round h                                 # fourth round refused
+expect 0 stop h --reason test
 
-# --- sans équipe, dossier personnel
-cd "$T"; attend 2 scaffold
-HOME="$T/app" bash -c "cd '$T/app' && rm -rf .equipe && python3 '$E' context" | grep -q PAS_UN_PROJET || { echo "ÉCHEC : dossier personnel non détecté"; echecs=$((echecs+1)); }
+# --- no team, home folder
+cd "$T"; expect 2 scaffold
+HOME="$T/app" bash -c "cd '$T/app' && rm -rf .team && python3 '$E' context" | grep -q NOT_A_PROJECT || { echo "FAIL: home folder not detected"; failures=$((failures+1)); }
 
-echo; [ "$echecs" = 0 ] && echo "Tout passe." || { echo "$echecs échec(s)."; exit 1; }
+echo; [ "$failures" = 0 ] && echo "All pass." || { echo "$failures failure(s)."; exit 1; }
