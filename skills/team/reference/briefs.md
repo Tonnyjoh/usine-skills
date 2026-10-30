@@ -2,6 +2,8 @@
 
 A subagent knows only what its brief says. Give **absolute paths** for the spec and the contract: a worktree starts from the last commit and does not contain these files if they are not committed yet.
 
+If an agent needs a running app, give it its own port and ask it to stop its server. Build once yourself when agents run at the same time, and tell them not to rebuild, because a build replaces what the others are serving. Never ask an agent to stop a server it did not start.
+
 ## Developer
 
 ```

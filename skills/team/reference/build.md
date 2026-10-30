@@ -40,6 +40,8 @@ team scope-check <agent> --worktree <path>     # worktree
 - `out_of_scope` or `spec_or_contract_touched`: incident. Report it, then have that work undone or redone.
 - `diverged_base`: the worktree does not start from the current branch. Resolve this before integrating.
 
+An incident is recorded once, and the next agent is not blamed for those files. If you change a file yourself between two agents, run `team lead-change <name> --reason "<what and why>"` for the same reason.
+
 In sequential mode, run it **after each agent**: the script then accepts its files as the baseline for checking the next one.
 
 If an agent is `blocked` on the contract, go to [integrate.md](integrate.md), step 1.

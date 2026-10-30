@@ -401,7 +401,10 @@ def instructions_for(agent):
 
 def render_agent(team, a):
     role = a["role"]
-    scope = ", ".join(a.get("scope", [])) or "none (read-only)"
+    if [norm(p) for p in a.get("scope", [])] == ["."]:
+        scope = "the project, except the specs, the contract and the design documents"
+    else:
+        scope = ", ".join(a.get("scope", [])) or "none (read-only)"
     v = {"NAME": a["name"], "SPECIALTY": a["specialty"], "SCOPE": scope, "MODEL": a.get("model", "sonnet"),
          "VERIFY_COMMAND": a.get("verification") or "none", "INSTALL": a.get("install") or "none"}
     if role == ROLE_DEV:
@@ -900,13 +903,32 @@ def cmd_start(args):
     team = load_team()
     if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", args.feature):
         blocked("INVALID_NAME", "Feature name expected in lowercase-with-hyphens.")
+    if args.auto and not (args.quote or "").strip():
+        blocked("EMPTY_QUOTE", "Auto mode needs the user's own words asking for it: pass --quote.")
     if state_path(args.feature).exists():
-        emit({"status": "exists", "state": load_state(args.feature)})
+        state = load_state(args.feature)
+        if args.auto:
+            state["auto"] = {"quote": args.quote, "date": now()}
+            save_state(state)
+        emit({"status": "exists", "state": state})
     state = {"feature": args.feature, "phase": "planning", "created": now(), "rounds": 0,
              "approval": None, "verifications": {}, "incidents": [], "baseline": None,
              "spec": os.path.relpath(spec_path(team, args.feature), ROOT)}
+    if args.auto:
+        state["auto"] = {"quote": args.quote, "date": now()}
     save_state(state)
     emit({"status": "ok", "state": state})
+
+
+def resolve_quote(e, args):
+    """The go-ahead is the user's: their words now, or their request for auto mode."""
+    if args.auto:
+        if not e.get("auto"):
+            blocked("AUTO_NOT_ENABLED", "This feature was not started in auto mode: ask the user for the go-ahead.")
+        return e["auto"]["quote"]
+    if not (args.quote or "").strip():
+        blocked("EMPTY_QUOTE", "Quote the user's words: the go-ahead is theirs.")
+    return args.quote
 
 
 def cmd_approve(args):
@@ -921,12 +943,11 @@ def cmd_approve(args):
     contract = contract_path(team)
     if len(active(team, ROLE_DEV)) > 1 and not (contract and contract.is_file()):
         blocked("NO_CONTRACT", "Several active developers: the contract must exist before the go-ahead.")
-    if not args.quote.strip():
-        blocked("EMPTY_QUOTE", "Quote the user's words: the go-ahead is theirs.")
+    quote = resolve_quote(e, args)
     text2 = re.sub(r"(Status\s*:\s*)[^\n]*", r"\1approved", text, count=1)
     if text2 != text:
         spec.write_text(text2)
-    e["approval"] = {"quote": args.quote, "date": now(), "hash": approval_hash(team, args.feature)}
+    e["approval"] = {"quote": quote, "auto": bool(args.auto), "date": now(), "hash": approval_hash(team, args.feature)}
     if e["phase"] == "planning":
         e["phase"] = "approved"
     save_state(e)
@@ -948,9 +969,7 @@ def cmd_approve_design(args):
     section = re.search(r"^## References\s*$(.*?)(?=^## |\Z)", brief.read_text(), re.M | re.S)
     if not section or not re.search(r"https?://|UNREACHABLE", section.group(1)):
         blocked("NO_REFERENCES", "The brief needs a '## References' section with URLs actually consulted, or UNREACHABLE and the reason.")
-    if not args.quote.strip():
-        blocked("EMPTY_QUOTE", "Quote the user's words: the go-ahead is theirs.")
-    e["design_approval"] = {"quote": args.quote, "date": now()}
+    e["design_approval"] = {"quote": resolve_quote(e, args), "auto": bool(args.auto), "date": now()}
     e["approval"]["hash"] = approval_hash(team, args.feature)
     e["phase"] = "design_approved"
     save_state(e)
@@ -1182,14 +1201,22 @@ def files_of_agent(team, a, args):
     return sorted(res), info, (e, current)
 
 
-def analyze_scope(team, a, files):
+def analyze_scope(team, a, files, feature=None):
     if a.get("role") == "tester" or a.get("role") == ROLE_DEV or a.get("role") in DESIGN_ROLES:
         outside = [f for f in files if not in_scope(f, a.get("scope", []))]
     else:
         outside = list(files)
     contract = team["project"].get("contract")
     specs_dir = norm(team["project"].get("specs_dir", "docs/specs"))
-    return outside, [f for f in files if f == contract or f.startswith(specs_dir + "/")]
+    forbidden = [f for f in files if f == contract or f.startswith(specs_dir + "/")]
+    # Design documents belong to the design agent, and even it may not edit an approved brief.
+    design_scope = [p for d in active(team, "design") for p in d.get("scope", [])]
+    if a.get("role") != "design":
+        forbidden += [f for f in files if in_scope(f, design_scope) and f not in forbidden]
+    elif feature and load_state(feature).get("design_approval"):
+        brief = os.path.relpath(design_brief_path(team, feature), ROOT)
+        forbidden += [f for f in files if f == brief]
+    return outside, forbidden
 
 
 def cmd_apply(args):
@@ -1222,18 +1249,58 @@ def cmd_scope_check(args):
     team = load_team()
     a = agent_by_name(team, args.agent)
     files, info, resume = files_of_agent(team, a, args)
-    outside, forbidden = analyze_scope(team, a, files)
+    outside, forbidden = analyze_scope(team, a, files, args.feature)
     incident = bool(outside or forbidden)
     if resume:
         e, current = resume
         if incident:
             e["incidents"].append({"agent": a["name"], "date": now(), "out_of_scope": outside, "spec_or_contract": forbidden})
-        else:
-            e["baseline"] = current
+        # Recorded once: the next agent must not be blamed for these files.
+        e["baseline"] = current
         save_state(e)
     emit({"agent": a["name"], "scope": a.get("scope", []), "files": files, "out_of_scope": outside,
           "spec_or_contract_touched": forbidden, **info,
           "status": "incident" if incident else "ok"}, 2 if incident else 0)
+
+
+def cmd_lead_change(args):
+    """The project lead changed files itself: the next agent must not be blamed for them."""
+    team = load_team()
+    e = load_state(args.feature)
+    e["baseline"] = snapshot(team)
+    e.setdefault("lead_changes", []).append({"reason": args.reason, "date": now()})
+    save_state(e)
+    emit({"status": "ok"})
+
+
+def cmd_note(args):
+    e = load_state(args.feature)
+    e.setdefault("decisions", []).append({"text": args.text, "date": now()})
+    save_state(e)
+    emit({"status": "ok", "decisions": len(e["decisions"])})
+
+
+def cmd_leftovers(args):
+    """Listening processes started from this project. Reports only: one may be the user's."""
+    try:
+        r = subprocess.run(["ss", "-ltnp"], capture_output=True, text=True, errors="replace")
+    except OSError:
+        emit({"status": "unavailable", "servers": []})
+    if r.returncode != 0:
+        emit({"status": "unavailable", "servers": []})
+    servers = []
+    for line in r.stdout.splitlines():
+        pid = re.search(r"pid=(\d+)", line)
+        port = re.search(r":(\d+)\s", line)
+        if not pid or not port:
+            continue
+        try:
+            cwd = Path(os.readlink(f"/proc/{pid.group(1)}/cwd"))
+        except OSError:
+            continue
+        if cwd == ROOT or ROOT in cwd.parents:
+            servers.append({"port": int(port.group(1)), "pid": int(pid.group(1)), "cwd": str(cwd)})
+    emit({"status": "ok", "servers": servers})
 
 
 def binary_present(cmd, cwd):
@@ -1333,11 +1400,23 @@ def main():
     x.set_defaults(fn=cmd_preflight)
     x = s.add_parser("start")
     x.add_argument("feature")
+    x.add_argument("--auto", action="store_true")
+    x.add_argument("--quote")
     x.set_defaults(fn=cmd_start)
     x = s.add_parser("approve")
     x.add_argument("feature")
-    x.add_argument("--quote", required=True)
+    x.add_argument("--quote")
+    x.add_argument("--auto", action="store_true")
     x.set_defaults(fn=cmd_approve)
+    x = s.add_parser("lead-change")
+    x.add_argument("feature")
+    x.add_argument("--reason", required=True)
+    x.set_defaults(fn=cmd_lead_change)
+    x = s.add_parser("note")
+    x.add_argument("feature")
+    x.add_argument("text")
+    x.set_defaults(fn=cmd_note)
+    s.add_parser("leftovers").set_defaults(fn=cmd_leftovers)
     x = s.add_parser("advance")
     x.add_argument("feature")
     x.add_argument("phase", choices=sorted(ORDER))
@@ -1345,7 +1424,8 @@ def main():
     x.set_defaults(fn=cmd_advance)
     x = s.add_parser("approve-design")
     x.add_argument("feature")
-    x.add_argument("--quote", required=True)
+    x.add_argument("--quote")
+    x.add_argument("--auto", action="store_true")
     x.set_defaults(fn=cmd_approve_design)
     x = s.add_parser("design-check")
     x.add_argument("--feature")

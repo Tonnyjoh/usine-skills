@@ -17,4 +17,6 @@ Start from `team status <name>`: verifications, rounds and incidents are recorde
 
 Also mention whatever weakened the guarantees: degraded mode, script unavailable, quality role not enabled.
 
+Before reporting, run `team leftovers`: it lists servers still running from this project. An agent's statement that it stopped one proves nothing. Stop those on ports you gave to agents, and leave the others: they may be the user's.
+
 No commit, push, merge or deployment without explicit consent: the report proposes them, it does not execute them. If the user accepts a commit, ask whether they want the attribution line: never add it by default. Write the commit message in English.

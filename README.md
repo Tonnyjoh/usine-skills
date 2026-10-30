@@ -84,10 +84,17 @@ Two ways to use it, depending on the size of the task.
 | `compose` | Compose a custom team, with questions |
 | `plan`, `design`, `build`, `integrate`, `review`, `fix`, `report` | Run a single phase |
 | `ship <feature>` | Chain everything |
+| `ship --auto <feature>` | Chain everything without asking, up to the commit |
 | `status` | See where a feature stands |
 | `doctor` | Spot gaps between the declared team and the project |
 
 With no argument, `/team` looks at the project and recommends what to do next.
+
+## Auto mode
+
+`/team ship --auto invoice-export` takes the team, spec and design decisions on its own and records them. You get a verified project and a list of what was decided for you.
+
+It still stops before any commit, push or deployment, on an irreversible action, after three fix rounds, and when something only you have is missing, such as a secret. All the checks stay. Passing them only proves what the spec says, and in this mode the skill wrote the spec, so look at the result. It can also build a whole project on a direction you would have rejected: it costs more tokens than stopping early. Allow your usual commands in Claude Code's settings first, because background agents cannot answer permission prompts.
 
 ## Rules that are enforced, not just written
 
@@ -212,10 +219,17 @@ Deux façons de s'en servir, selon la taille de la tâche.
 | `compose` | Composer une équipe sur mesure, avec questions |
 | `plan`, `design`, `build`, `integrate`, `review`, `fix`, `report` | Lancer une phase seule |
 | `ship <feature>` | Tout enchaîner |
+| `ship --auto <feature>` | Tout enchaîner sans demander, jusqu'au commit |
 | `status` | Voir où en est une fonctionnalité |
 | `doctor` | Repérer les écarts entre l'équipe déclarée et le projet |
 
 Sans argument, `/team` regarde le projet et recommande la suite.
+
+## Le mode automatique
+
+`/team ship --auto invoice-export` prend seul les décisions d'équipe, de spec et de design, et les enregistre. Tu récupères un projet vérifié et la liste de ce qui a été décidé à ta place.
+
+Il s'arrête quand même avant tout commit, push ou déploiement, sur une action irréversible, après trois tours de correction, et quand il manque une chose que toi seul as, comme un secret. Tous les contrôles restent. Ils ne prouvent que ce que dit la spec, et dans ce mode c'est le skill qui l'a écrite : regarde donc le résultat. Il peut aussi construire tout un projet sur une direction que tu aurais refusée, ce qui coûte plus de tokens qu'un arrêt précoce. Autorise d'abord tes commandes habituelles dans les réglages de Claude Code, car les agents en arrière-plan ne peuvent pas répondre aux demandes d'autorisation.
 
 ## Des règles appliquées, pas seulement écrites
 

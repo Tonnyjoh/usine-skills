@@ -10,4 +10,6 @@ Chain the phases, loading each reference when you reach it. "Ship" does not allo
 6. [review.md](review.md), then [fix.md](fix.md) as long as needed, three rounds at most.
 7. [report.md](report.md). **Stop: the user decides about the commit and what comes next.**
 
+With `--auto` in the user's own message, read [auto.md](auto.md) first: it replaces the first three stops.
+
 Between two stops, continue without asking for confirmation. Resuming after an interruption starts from `team status`, never from your memory of the conversation.

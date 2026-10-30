@@ -16,9 +16,9 @@ team advance <name> design
 
 Launch the design agent with: the spec's absolute path, the project's existing `DESIGN.md` and `PRODUCT.md` if any, and any taste the user expressed in their own words. Add nothing about how it should look: the direction is its job.
 
-`team context` says whether impeccable is installed. The agent works without it, but report that it was unavailable.
+`team context` says whether impeccable is installed. The agent works without it, but report that it was unavailable. Inside a subagent, impeccable also runs in a reduced form: no interview, no generated comps. The brief is therefore a written direction, not an image: say so when you present it.
 
-## 2. Stop: the user chooses
+## 2. Stop: the user chooses (auto mode: see [auto.md](auto.md))
 
 **Stop** and present the brief `<design_dir>/<name>.md`: the direction in a few lines, the typography and colors, the references and what was taken from them. Say plainly which references were only seen by title, and pass on the agent's questions.
 

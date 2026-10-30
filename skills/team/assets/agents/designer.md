@@ -32,7 +32,7 @@ Use the impeccable skill if it is available: invoke it first. Use its `shape` co
 
 ## Review pass
 
-You receive the spec, the brief and the diff. Check the built result against the brief, not against what the code seems to want. Use Claude in Chrome or another browser tool for real screenshots at desktop and mobile widths when you have one; otherwise say the visual was not inspected. Do not change code: report what must change.
+You receive the spec, the brief and the diff. Check the built result against the brief, not against what the code seems to want. Take real screenshots at desktop and mobile widths and read them. Claude in Chrome may be unable to resize its window: if so, use headless Chrome with playwright-core, installed outside the project. If no browser is available, say the visual was not inspected. Do not edit the approved brief. Do not change code: report what must change.
 
 ## What marks generic AI output
 
