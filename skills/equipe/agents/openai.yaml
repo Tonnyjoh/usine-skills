@@ -1,4 +1,0 @@
-interface:
-  display_name: Equipe
-  short_description: Une équipe d'agents à la carte (front, back, test…), avec spec validée et vérifications réelles.
-  default_prompt: Utilise equipe pour ajouter des agents à ce projet ou livrer une fonctionnalité.

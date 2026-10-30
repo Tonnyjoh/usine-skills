@@ -1,0 +1,4 @@
+interface:
+  display_name: Team
+  short_description: An à la carte team of agents (front, back, test…), with an approved spec and real verifications.
+  default_prompt: Use team to add agents to this project or ship a feature.
