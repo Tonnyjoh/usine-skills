@@ -257,4 +257,29 @@ expect 0 advance q development --no-interface "background job"
 cd "$T"; expect 2 scaffold
 HOME="$T/app" bash -c "cd '$T/app' && rm -rf .team && python3 '$E' context" | grep -q NOT_A_PROJECT || { echo "FAIL: home folder not detected"; failures=$((failures+1)); }
 
+# --- the README promises no network and no environment variable: keep it true
+if ! python3 -I - "$E" <<'PY'
+import ast, sys
+tree = ast.parse(open(sys.argv[1], encoding="utf-8").read())
+NETWORK = {"socket", "ssl", "urllib", "urllib3", "http", "requests", "httpx", "aiohttp",
+           "ftplib", "smtplib", "poplib", "imaplib", "telnetlib", "xmlrpc", "asyncio", "webbrowser"}
+ENV = {"environ", "environb", "getenv", "getenvb", "putenv", "unsetenv"}
+bad = []
+for n in ast.walk(tree):
+    if isinstance(n, ast.Import):
+        bad += [f"line {n.lineno}: import {a.name}" for a in n.names if a.name.split(".")[0] in NETWORK | {"importlib"}]
+    elif isinstance(n, ast.ImportFrom):
+        if (n.module or "").split(".")[0] in NETWORK | {"importlib"}:
+            bad.append(f"line {n.lineno}: from {n.module} import")
+        bad += [f"line {n.lineno}: from {n.module} import {a.name}" for a in n.names if a.name in ENV]
+    elif isinstance(n, ast.Attribute) and n.attr in ENV:
+        bad.append(f"line {n.lineno}: .{n.attr}")
+    elif isinstance(n, ast.Name) and n.id == "__import__":
+        bad.append(f"line {n.lineno}: __import__")
+for b in bad:
+    print("FAIL: script", b)
+sys.exit(1 if bad else 0)
+PY
+then failures=$((failures+1)); else echo "ok  : no network module, no environment variable"; fi
+
 echo; [ "$failures" = 0 ] && echo "All pass." || { echo "$failures failure(s)."; exit 1; }

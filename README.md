@@ -2,7 +2,11 @@
 
 **English** · [Français](#français)
 
-An à la carte team of agents for Claude Code. In any project:
+An à la carte team of agents for Claude Code, whose guardrails are enforced by a script rather than just written in a prompt: no code before your go-ahead, "done" only when the tests really pass, every agent kept to its own files, no commit without asking.
+
+<!-- Demo GIF: add docs/demo.gif here once recorded, e.g. ![team ship demo](docs/demo.gif) -->
+
+In any project:
 
 ```
 /team add front test
@@ -52,7 +56,7 @@ Requires Python 3 and git; no other dependency.
 
 The skill is built for Claude Code. On a shared project, add `codex` to `project.tools` in `.team/team.json`, rerun the scaffold, and also install the skill in `~/.agents/skills/team`, where Codex calls it with `$team`. This support follows the Codex documentation but has not been tried in a real Codex session.
 
-| | Claude Code | Codex | Other tools |
+| | Claude Code | Codex (experimental) | Other tools |
 |---|---|---|---|
 | Script and guardrails | Yes | Yes | Yes |
 | Project rules | `CLAUDE.md` | `AGENTS.md` | `AGENTS.md`, if the tool reads it |
@@ -109,6 +113,19 @@ It never replaces an existing file without showing you the diff.
 
 **No commit without asking you, every time.** Agents leave their work as uncommitted changes, even in parallel. If you accept a commit, you are also asked whether you want the `Co-Authored-By: … <noreply@…>` line: since several tools or people may be involved, it is never added by default. Commit messages are written in English.
 
+## What the script does
+
+`skills/team/scripts/team` is a single Python 3 file that uses only the standard library. It makes no network call and reads no environment variable. It runs only these programs:
+
+- **`git`**, to read the state of the project: status, diff, log, branches, worktrees. The only git commands that change anything are `git add` inside an agent's worktree and `git apply` to bring that work back into your tree, both through `team apply`. It never commits, pushes or merges.
+- **Your verification commands**, those declared in `.team/team.json` (for example `npm test && npm run lint`), through your shell, with `team verify`.
+- **`ss -ltnp`**, with `team leftovers`, to list the servers listening on a port. It reports them and stops nothing.
+- **The [impeccable](https://impeccable.style) command**, with `team design-check`, and only if it is already installed in `.claude/skills/` or `.agents/skills/`, in the project or in your home folder. Otherwise nothing is run, and the check works without it.
+
+It writes only inside the project: `.team/`, the agent files, `CLAUDE.md` or `AGENTS.md`, and `docs/`. Started from your home folder, it creates nothing there and only lists your most recent git repositories, to ask which project you mean.
+
+`tests/smoke.sh` fails if the script ever imports a network module or reads an environment variable.
+
 ## In your project
 
 | File | Role |
@@ -135,7 +152,9 @@ MIT
 
 [English](#team) · **Français**
 
-Une équipe d'agents à la carte pour Claude Code. Dans n'importe quel projet :
+Une équipe d'agents à la carte pour Claude Code, dont les garde-fous sont appliqués par un script et pas seulement écrits dans un prompt : pas de code avant ton feu vert, « terminé » seulement quand les tests passent vraiment, chaque agent limité à ses fichiers, aucun commit sans te demander.
+
+Dans n'importe quel projet :
 
 ```
 /team add front test
@@ -187,7 +206,7 @@ Il faut Python 3 et git ; aucune autre dépendance.
 
 Le skill est fait pour Claude Code. Sur un projet partagé, ajoute `codex` à `project.tools` dans `.team/team.json`, relance `team scaffold`, et installe aussi le skill dans `~/.agents/skills/team`, où Codex l'appelle avec `$team`. Ce support suit la documentation de Codex, mais n'a pas été essayé dans une vraie session Codex.
 
-| | Claude Code | Codex | Autres outils |
+| | Claude Code | Codex (expérimental) | Autres outils |
 |---|---|---|---|
 | Script et garde-fous | Oui | Oui | Oui |
 | Règles du projet | `CLAUDE.md` | `AGENTS.md` | `AGENTS.md`, si l'outil le lit |
@@ -243,6 +262,19 @@ Le script `skills/team/scripts/team` refuse ce qui ne doit pas passer :
 Il ne remplace jamais un fichier existant sans te montrer le diff.
 
 **Aucun commit sans te demander, à chaque fois.** Les agents laissent leur travail en modifications non committées, y compris en parallèle. Si tu acceptes un commit, on te demande aussi si tu veux la ligne `Co-Authored-By: … <noreply@…>` : plusieurs outils ou personnes pouvant intervenir, elle n'est jamais ajoutée d'office. Les messages de commit s'écrivent en anglais.
+
+## Ce que fait le script
+
+`skills/team/scripts/team` est un seul fichier Python 3 qui n'utilise que la bibliothèque standard. Il ne fait aucun appel réseau et ne lit aucune variable d'environnement. Il ne lance que ces programmes :
+
+- **`git`**, pour lire l'état du projet : statut, diff, historique, branches, worktrees. Les seules commandes git qui modifient quelque chose sont `git add` dans le worktree d'un agent et `git apply` pour rapporter ce travail dans ton arbre, toutes deux via `team apply`. Il ne fait jamais de commit, de push ni de merge.
+- **Tes commandes de vérification**, celles déclarées dans `.team/team.json` (par exemple `npm test && npm run lint`), via ton shell, avec `team verify`.
+- **`ss -ltnp`**, avec `team leftovers`, pour lister les serveurs qui écoutent sur un port. Il les signale et n'arrête rien.
+- **La commande [impeccable](https://impeccable.style)**, avec `team design-check`, et seulement si elle est déjà installée dans `.claude/skills/` ou `.agents/skills/`, dans le projet ou dans ton dossier personnel. Sinon rien n'est lancé, et le contrôle fonctionne sans elle.
+
+Il n'écrit que dans le projet : `.team/`, les fichiers d'agents, `CLAUDE.md` ou `AGENTS.md`, et `docs/`. Lancé depuis ton dossier personnel, il n'y crée rien et liste seulement tes dépôts git les plus récents, pour te demander de quel projet il s'agit.
+
+`tests/smoke.sh` échoue si le script importe un jour un module réseau ou lit une variable d'environnement.
 
 ## Dans ton projet
 
