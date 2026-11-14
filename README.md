@@ -4,7 +4,7 @@
 
 An à la carte team of agents for Claude Code, whose guardrails are enforced by a script rather than just written in a prompt: no code before your go-ahead, "done" only when the tests really pass, every agent kept to its own files, no commit without asking.
 
-<!-- Demo GIF: add docs/demo.gif here once recorded, e.g. ![team ship demo](docs/demo.gif) -->
+![/team add front test on an Android project: the skill asks one question, then proposes the team to approve](docs/demo.gif)
 
 In any project:
 
