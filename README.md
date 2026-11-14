@@ -136,6 +136,10 @@ It writes only inside the project: `.team/`, the agent files, `CLAUDE.md` or `AG
 | `docs/specs/`, `docs/api/openapi.yaml`, `docs/design/` | Specs, contract and design directions |
 | `CLAUDE.md` | "Agent team" section |
 
+## Built with team
+
+- **[Conso Flybox](https://github.com/Tonnyjoh/conso-wifi):** an Android app that tracks a 4G home router's data usage, built with a `mobile`, `design` and `tester` team.
+
 ## Tests
 
 ```bash
@@ -285,6 +289,10 @@ Il n'écrit que dans le projet : `.team/`, les fichiers d'agents, `CLAUDE.md` ou
 | `.claude/agents/*.md` | Les agents générés, que tu peux retoucher |
 | `docs/specs/`, `docs/api/openapi.yaml`, `docs/design/` | Specs, contrat et directions visuelles |
 | `CLAUDE.md` | Section « Agent team » |
+
+## Construit avec team
+
+- **[Conso Flybox](https://github.com/Tonnyjoh/conso-wifi) :** une application Android qui suit la consommation internet d'une box 4G, construite avec une équipe `mobile`, `design` et `tester`.
 
 ## Tests
 
